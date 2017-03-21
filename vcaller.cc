@@ -111,7 +111,7 @@ bcf1_t* create_vcf_line(bcf_hdr_t *hdr, char ref, std::vector<char> variants){
 	std::vector<char> alleles {ref};
 	alleles.insert(alleles.end(),variants.begin(),variants.end());
 	bcf_update_alleles(hdr, line, &alleles[0],alleles.size());
-
+	bcf_update_genotypes(hdr, line, bcf_gt_phased(0), 1); //FIXME
 }
 
 //typedef int (*bam_plp_auto_f)(void *data, bam1_t *b);
