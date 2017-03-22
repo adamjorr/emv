@@ -1,3 +1,5 @@
+#include "em.h"
+
 EM::EM(std::function<long double(std::vector)> q_function, std::function<std::vector(std::vector(std::vector)> m_function, std::vector theta) : q_function(q_function), m_function(m_function), likelihood(0), theta(theta){
 }
 
@@ -12,6 +14,7 @@ long double EM::likelihood_diff(long double previous, long double current){
 std::vector EM::start(long double stop){
 	do{
 		long double currentlike = q_function(theta);
+		std::clog << "Theta: " << theta << "likelihood: " << currentlike << std::endl;
 		long double difference = likelihood_diff(likelihood, currentlike);
 		likelihood = currentlike;
 		theta = m_function(theta);
