@@ -5,9 +5,9 @@
 class EM{
 protected:
 	long double likelihood;
-	std::vector theta;
-	std::function<long double(std::vector theta)> q_function; //returns expected value of log likelihood function
-	std::function<std::vector(std::vector theta)> m_function; //returns theta that maximizes Q
+	std::vector<long double> theta;
+	std::function<long double(std::vector<long double> theta)> q_function; //returns expected value of log likelihood function
+	std::function<std::vector(std::vector<long double> theta)> m_function; //returns theta that maximizes Q
 	EM(std::function<long double(std::vector)> q_function, std::function<std::vector(std::vector(std::vector)> m_function, std::vector theta); //initialize with guess for theta
 	long double likelihood_diff(long double, long double);
 public:
