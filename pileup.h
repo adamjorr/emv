@@ -1,6 +1,11 @@
 #ifndef __MEEP_PILEUP_INCLUDED__
 #define __MEEP_PILEUP_INCLUDED__
 
+#include "samio.h"
+#include "reftype.h"
+#include <htslib/sam.h>
+#include <string>
+
 class Pileup{
 protected:
 	SamReader reader;
