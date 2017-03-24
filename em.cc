@@ -1,6 +1,6 @@
 #include "em.h"
 
-EM::EM(std::function<long double(std::vector)> q_function, std::function<std::vector(std::vector(std::vector)> m_function, std::vector theta) : q_function(q_function), m_function(m_function), likelihood(0), theta(theta){
+EM::EM(std::function<long double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta) : q_function(q_function), m_function(m_function), likelihood(0), theta(theta){
 }
 
 long double EM::likelihood_diff(long double previous, long double current){
