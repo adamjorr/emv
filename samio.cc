@@ -94,6 +94,15 @@ std::string SamReader::get_ref_name(int tid){
 	return std::string(header->target_name[tid]);
 }
 
+//return tid of given name
+int SamReader::get_ref_tid(std::string name){
+	for (int i = 0; i < header->n_targets; ++i){
+		if (get_ref_name(i) == name){
+			return i;
+		}
+	}
+}
+
 //SamWriter class
 void SamWriter::check_open_success(){
 	if (this->outfh == 0) {

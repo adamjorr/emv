@@ -22,6 +22,7 @@ public:
 	int next(bam1_t *b);
 	std::string get_ref_name(bam1_t* b);
 	std::string get_ref_name(int tid);
+	int get_ref_tid(std::string name);
 	SamReader();
 	SamReader(const std::string filename);
 	SamReader(const std::string filename, const std::string region);
