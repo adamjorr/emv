@@ -23,7 +23,7 @@ void pileup_and_call(){
 std::vector<char> call_variants(std::vector<char> alleles){
 	int coverage = alleles.size();
 	int cutoff = get_cutoff(coverage);
-	std::map<char, int> counts;
+	std::map<char, int> counts{{"A",0},{"T",0},{"G",0},{"C",0}};
 	std::vector<char> variants;
 	for(auto it = alleles.begin(); it != alleles.end(); ++it){
 		counts[*it] = counts[*it] + 1;
