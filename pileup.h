@@ -24,8 +24,14 @@ public:
 	std::vector<std::string> names;
 	std::vector<std::string> readgroups;
 	std::vector<std::string> samples;
+	std::map<char,int> counts;
 	int plp_get_read(void *data, bam1_t *b);
 	int next();
+	int get_tid();
+	int get_pos();
+	int get_ref_tid(std::string name);
+	std::map<std::string,int> get_name_map();
+	std::string chr_name();
 };
 
 
