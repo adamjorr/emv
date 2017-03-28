@@ -101,6 +101,15 @@ int SamReader::get_ref_tid(std::string name){
 			return i;
 		}
 	}
+	throw std::runtime_error("error getting tid, chr name " + name + " not found");
+}
+
+std::map<std::string,int> get_name_map(){
+	std::map<std::string,int> m;
+	for (int i = 0; i < header->n_targets; ++i){
+		m[get_ref_name(i)] = i;
+	}
+	return m;
 }
 
 //SamWriter class
