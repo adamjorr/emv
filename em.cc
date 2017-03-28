@@ -11,7 +11,7 @@ long double EM::likelihood_diff(long double previous, long double current){
 	}
 }
 
-std::vector EM::start(long double stop){
+std::tuple<T...> EM::start(long double stop){
 	do{
 		long double currentlike = q_function(theta);
 		std::clog << "Theta: " << theta << "likelihood: " << currentlike << std::endl;
