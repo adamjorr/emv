@@ -19,9 +19,8 @@ int plp_get_read(void *data, bam1_t *b){
 //possible optimization: store sequence strings in a hash w/ alignment, throw out of hash once no longer in pileup
 int next(){
 	if((pileup = bam_plp_auto(iter, &tid, &pos, &cov)) != nullptr){ //successfully pile up new position
-		alleles.clear(); qual.clear(); names.clear(); readgroups.clear(); samples.clear();
+		alleles.clear(); qual.clear(); names.clear(); readgroups.clear(); samples.clear(); counts.clear();
 		alleles.reserve(cov); qual.reserve(cov); names.reserve(cov); readgroups.reserve(cov); samples.reserve(cov);
-		std::map<char, int> counts{{"A",0},{"T",0},{"G",0},{"C",0}};
 		for (i = 0; i < cov; i++){
 			bam1_t* alignment = pileup[i].b;
 			uint8_t *seq = bam_get_seq(alignment);
@@ -29,7 +28,7 @@ int next(){
 			int baseint = bam_seqi(seq,qpos)
 			char allele = seq_nt16_str[baseint];
 			alleles[i] = allele;
-			counts[allele] += 1;
+			++counts[allele];
 			qual[i] = bam_get_qual(alignment)[qpos];
 			names[i] = std::string(bam_get_qname(alignment));
 			readgroups[i] = bam_aux_get(alignment, "RG");
