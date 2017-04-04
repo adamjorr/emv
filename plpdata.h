@@ -5,13 +5,13 @@
 class Pileupdata{
 protected:
 	Pileup plp;
-	vector<vector<std::tuple<vector<char>,vector<char>,vector<std::string>>>> data; //data[tid][pos] = (bases, qualities, readgroups)
+	vector<vector<std::tuple<vector<char>,std::map<char,int>,vector<char>,vector<std::string>>>> data; //data[tid][pos] = (bases, counts, qualities, readgroups)
 	void populate_data();
 public:
 	vector<char> bases_at(int tid, int pos);
 	int depth_at(int tid, int pos);
 	int num_base(int tid, int pos, char base);
-	vector<vector<std::tuple<vector<char>,vector<char>,vector<std::string>>>> get_data();
+	vector<vector<std::tuple<vector<char>,std::map<char,int>,vector<char>,vector<std::string>>>> get_data();
 	std::map<std::string,int> get_name_map();
 	Pileupdata(std::string filename, std::string refname, std::string region);
 	Pileupdata(std::string filename, std::string refname);

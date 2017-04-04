@@ -4,13 +4,18 @@
 #include "pileup.h"
 #include "em.h"
 
-template<typename... T>
+typedef std::tuple<long double> theta_t;
+
 class Seqem{
 protected:
-	Pileup plp;
+	Pileupdata plp;
 	EM em;
+	theta_t theta;
 public:
-	Seqem(std::string samfile, std::function<long double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta);
+	Seqem(std::string samfile, std::string refname);
+	theta_t start(long double stop);
+	long double q_function(theta_t theta);
+	theta_t m_function(theta_t theta);
 };
 
 

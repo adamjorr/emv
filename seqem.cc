@@ -1,8 +1,19 @@
 #include "seqem.h"
 
-Seqem::Seqem(Pileup plp, std::function<long double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta):
-	em(q_function,m_function,theta), plp(plp) {}
+Seqem::Seqem(std::string samfile, std::string refname) : em(q_function,m_function,theta), plp(samfile,refname), theta() {
+};
 
+theta_t Seqem::start(long double stop){
+	return em.start(stop);
+}
+
+long double q_function(theta_t theta){
+
+}
+
+theta_t m_function(theta_t theta){
+
+}
 
 
 

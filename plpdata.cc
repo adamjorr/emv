@@ -14,7 +14,7 @@ Pileupdata(Pileup p) plp(p), data() {
 
 void Pileupdata::populate_data(){
 	while(plp.next() != 0){
-		data[plp.get_tid()][plp.get_pos()] = std::make_tuple(plp.alleles,plp.qual,plp.readgroups);
+		data[plp.get_tid()][plp.get_pos()] = std::make_tuple(plp.alleles,plp.counts,plp.qual,plp.readgroups);
 	}
 }
 
@@ -27,13 +27,14 @@ int Pileupdata::depth_at(int tid, int pos){
 }
 
 int Pileupdata::num_base(int tid, int pos, char base){
-	std::map<char, int> counts{{"A",0},{"T",0},{"G",0},{"C",0}};
-	vector<char> alleles = bases_at(tid,pos);
-	for(auto it = alleles.begin(); it != alleles.end(); ++it){
-		counts[*it] += counts[*it];
-	}
+	return std::get<1>(data[tid][pos])[base];
 }
 
 std::map<std::string,int> Pileupdata::get_name_map(){
 	return plp.get_name_map();
 }
+
+vector<vector<std::tuple<vector<char>,std::map<char,int>,vector<char>,vector<std::string>>>> Pileupdata::get_data(){
+	return data;
+}
+
