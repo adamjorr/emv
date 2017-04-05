@@ -25,6 +25,26 @@ int Genotype::getploidy(){
 	return ploidy;
 }
 
+//check out http://genome.sph.umich.edu/wiki/Relationship_between_Ploidy,_Alleles_and_Genotypes
+static void enumerate_gts(std::vector<Genotype> v, int stopallele, int ploidy, std::string genotype){
+	if (genotype.length()==ploidy){
+		v.push(Genotype(genotype));
+	}
+	else{
+		for (int i = 0; i < stopallele, ++i){
+			std::string s(alleles[i]);
+			s.append(genotype);
+			enumerate_gts(v,i+1, ploidy, s);
+		}
+	}
+}
+
+static std::vector<Genotype> enumerate_gts(int ploidy){
+	std::vector<Genotype> v;
+	enumerate_gts(v,alleles.size(),ploidy,"");
+	return v;
+}
+
 
 
 
