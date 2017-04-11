@@ -20,7 +20,7 @@ long double q_function(theta_t theta){
 		for(vector<pileuptuple_t>::iterator pos = *tid.begin(); pos != *tid.end(); ++pos){
 			vector<char> x = std::get<0>(*pos);
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-				p += pg_given_xtheta(*g, x, theta) + log(px_given_gtheta(x, *g, theta) + pg(*g));		
+				p += pg_given_xtheta(*g, x, theta) + px_given_gtheta(x, *g, theta) + pg(*g);		
 			}
 		}
 	}
@@ -28,7 +28,7 @@ long double q_function(theta_t theta){
 }
 
 theta_t m_function(theta_t theta){
-	
+
 }
 
 long double pg_given_xtheta(Genotype g, vector<char> x, theta_t theta){
