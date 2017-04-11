@@ -34,7 +34,7 @@ std::map<std::string,int> Pileupdata::get_name_map(){
 	return plp.get_name_map();
 }
 
-vector<vector<std::tuple<vector<char>,std::map<char,int>,vector<char>,vector<std::string>>>> Pileupdata::get_data(){
+pileupdata_t Pileupdata::get_data(){
 	return data;
 }
 
