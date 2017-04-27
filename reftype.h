@@ -1,6 +1,8 @@
 #ifndef __ERRLUMINA_REFTYPE_INCLUDED__
 #define __ERRLUMINA_REFTYPE_INCLUDED__
 
+#include <htslib/faidx.h>
+
 class Reftype{
 protected:
 	faidx_t* faidx_p;

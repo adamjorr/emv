@@ -5,6 +5,7 @@
 #include <htslib/hts.h>
 #include <htslib/sam.h>
 #include <string>
+#include <map>
 
 class SamReader{
 protected:

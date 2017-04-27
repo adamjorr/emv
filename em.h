@@ -1,6 +1,9 @@
 #ifndef __MEEP_EM_INCLUDED__
 #define __MEEP_EM_INCLUDED__
 
+#include <tuple>
+#include <vector>
+
 //see https://www2.ee.washington.edu/techsite/papers/documents/UWEETR-2010-0002.pdf for a tutorial on EM
 template<typename... T>
 class EM{

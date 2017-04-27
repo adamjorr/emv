@@ -2,17 +2,20 @@
 #define __MEEP_SEQEM_INCLUDED__
 
 #include "pileup.h"
+#include "plpdata.h"
 #include "em.h"
+#include "genotype.h"
+#include <vector>
 
 typedef std::tuple<long double> theta_t; //mu parameter
 
 class Seqem{
 protected:
 	Pileupdata plp;
-	EM em;
+	EM<theta_t> em;
 	theta_t theta;
 	int ploidy;
-	vector<Genotype> possible_gts;
+	std::vector<Genotype> possible_gts;
 public:
 	Seqem(std::string samfile, std::string refname);
 	Seqem(std::string samfile, std::string refname, int ploidy);
@@ -20,8 +23,8 @@ public:
 	long double q_function(theta_t theta);
 	theta_t m_function(theta_t theta);
 	long double calc_s(std::vector<char> x, Genotype g, theta_t theta);
-	long double pg_given_xtheta(Genotype g, vector<char> x, theta_t theta);
-	long double px_given_gtheta(vector<char> x, Genotype g, theta_t theta);
+	long double pg_given_xtheta(Genotype g, std::vector<char> x, theta_t theta);
+	long double px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta);
 	long double pn_given_gtheta(char n, Genotype g, theta_t theta);
 	long double pg(Genotype g);
 };

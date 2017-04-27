@@ -5,6 +5,7 @@
 #include "reftype.h"
 #include <htslib/sam.h>
 #include <string>
+#include <vector>
 
 class Pileup{
 protected:

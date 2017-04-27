@@ -1,10 +1,10 @@
-#include "samio.h"
-#include "mismatchfinder.h"
+#include "seqem.h"
+#include "plpdata.h"
 #include <string>
 #include <iostream>
 
 int main(int argc, char *argv[]){
-	SamReader reader("testdata/test.sam");
-	MismatchFinder mismatcher(&reader,"testdata/test.fa");
-	mismatcher.dump_locations();
+	Seqem seq("testdata/test.sam","testdata/test.fa");
+	std::tuple<long double> result = seq.start(.001);
+	std::cout << "Theta is: " << std::get<0>(result) << std::endl;
 }
