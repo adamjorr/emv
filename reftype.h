@@ -2,10 +2,12 @@
 #define __ERRLUMINA_REFTYPE_INCLUDED__
 
 #include <htslib/faidx.h>
+#include <string>
 
 class Reftype{
 protected:
 	faidx_t* faidx_p;
+	char* ref_p;
 	std::string ref;
 	int ref_len;
 	std::string region;

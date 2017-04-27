@@ -1,7 +1,7 @@
 #include "seqem.h"
 #include <cmath>
 
-Seqem::Seqem(std::string samfile, std::string refname, int ploidy) : em(q_function,m_function,theta), plp(samfile,refname), theta(), ploidy(ploidy) {
+Seqem::Seqem(std::string samfile, std::string refname, int ploidy) : em(std::function<long double>(&Seqem::q_function),&Seqem::m_function,theta), plp(samfile,refname), theta(), ploidy(ploidy) {
 	possible_gts = Genotype.enumerate_gts(ploidy);
 };
 

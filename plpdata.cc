@@ -4,11 +4,11 @@ Pileupdata::Pileupdata(std::string filename, std::string refname, std::string re
 	populate_data();
 }
 
-Pileupdata(std::string filename, std::string refname) : plp(filename, refname), data() {
+Pileupdata::Pileupdata(std::string filename, std::string refname) : plp(filename, refname), data() {
 	populate_data();
 }
 
-Pileupdata(Pileup p) plp(p), data() {
+Pileupdata::Pileupdata(Pileup p) : plp(p), data() {
 	populate_data();
 }
 
@@ -18,7 +18,7 @@ void Pileupdata::populate_data(){
 	}
 }
 
-vector<char> Pileupdata::bases_at(int tid, int pos){
+std::vector<char> Pileupdata::bases_at(int tid, int pos){
 	return std::get<0>(data[tid][pos]);
 }
 

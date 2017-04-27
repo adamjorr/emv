@@ -7,7 +7,7 @@ Genotype::Genotype(std::string gtstr) : gt(), ploidy(0) {
 	}
 }
 
-Genotype::Genotype(map<char,int> gt) : gt(gt), ploidy(0) {
+Genotype::Genotype(std::map<char,int> gt) : gt(gt), ploidy(0) {
 	for(auto it = gt.begin(); it!= gt.end(); ++it){
 		ploidy += it->second;
 	}
@@ -26,26 +26,26 @@ int Genotype::getploidy(){
 }
 
 //check out http://genome.sph.umich.edu/wiki/Relationship_between_Ploidy,_Alleles_and_Genotypes
-static void Genotype::enumerate_gts(std::vector<Genotype> v, int stopallele, int ploidy, std::string genotype){
+void Genotype::enumerate_gts(std::vector<Genotype> v, int stopallele, int ploidy, std::string genotype){
 	if (genotype.length()==ploidy){
-		v.push(Genotype(genotype));
+		v.push_back(Genotype(genotype));
 	}
 	else{
-		for (int i = 0; i < stopallele, ++i){
-			std::string s(alleles[i]);
+		for (int i = 0; i < stopallele; ++i){
+			std::string s(&alleles[i]);
 			s.append(genotype);
 			enumerate_gts(v,i+1, ploidy, s);
 		}
 	}
 }
 
-static std::vector<Genotype> Genotype::enumerate_gts(int ploidy){
+std::vector<Genotype> Genotype::enumerate_gts(int ploidy){
 	std::vector<Genotype> v;
 	enumerate_gts(v,alleles.size(),ploidy,"");
 	return v;
 }
 
-static const std::vector<char> Genotype::alleles = {'A','T','G','C'};
+const std::vector<char> Genotype::alleles = {'A','T','G','C'};
 
 
 

@@ -14,7 +14,7 @@ protected:
 	int tid;
 	int pos;
 	int cov;
-	bam_pileup1_t *pileup;
+	const bam_pileup1_t *pileup;
 	bam_plp_t iter;
 public:
 	Pileup(std::string samfile, std::string reffile);
@@ -26,7 +26,7 @@ public:
 	std::vector<std::string> readgroups;
 	std::vector<std::string> samples;
 	std::map<char,int> counts;
-	int plp_get_read(void *data, bam1_t *b);
+	static int plp_get_read(void *data, bam1_t *b);
 	int next();
 	int get_tid();
 	int get_pos();
