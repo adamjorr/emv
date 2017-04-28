@@ -3,7 +3,6 @@ set (CMAKE_CXX_STANDARD 11)
 project (meep)
 
 add_library(libmeep STATIC
-  em.cc
   genotype.cc
   pileup.cc
   plpdata.cc

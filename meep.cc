@@ -6,5 +6,5 @@
 int main(int argc, char *argv[]){
 	Seqem seq("testdata/test.sam","testdata/test.fa");
 	std::tuple<long double> result = seq.start(.001);
-	std::cout << "Theta is: " << std::get<0>(result) << std::endl;
+	std::cout << "Theta is: " << std::get<0l>(result) << std::endl;
 }

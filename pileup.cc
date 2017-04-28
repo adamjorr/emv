@@ -10,6 +10,10 @@ Pileup::Pileup(std::string samfile, std::string reffile, std::string region): re
 	iter = bam_plp_init(&Pileup::plp_get_read, &reader);
 }
 
+Pileup::~Pileup(){
+	bam_plp_destroy(iter);
+}
+
 //typedef int (*bam_plp_auto_f)(void *data, bam1_t *b);
 int Pileup::plp_get_read(void *data, bam1_t *b){
 	SamReader *reader = (SamReader*)data;
