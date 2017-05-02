@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <iostream>
+#include "tuple_print.h"
 
 //see https://www2.ee.washington.edu/techsite/papers/documents/UWEETR-2010-0002.pdf for a tutorial on EM
 template<typename... T>
@@ -43,7 +44,7 @@ std::tuple<T...> EM<T...>::start(long double stop){
 	long double difference;
 	do{
 		long double currentlike = q_function(theta);
-		std::clog << "Theta: " << std::to_string(theta) << "likelihood: " << currentlike << std::endl;
+		std::clog << "Theta: " << theta << "likelihood: " << currentlike << std::endl;
 		difference = likelihood_diff(likelihood, currentlike);
 		likelihood = currentlike;
 		theta = m_function(theta);

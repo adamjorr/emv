@@ -9,6 +9,7 @@ add_library(libmeep STATIC
   reftype.cc
   samio.cc
   seqem.cc
+  tuple_print.cc
 )
 
 target_link_libraries(libmeep hts)
