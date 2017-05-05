@@ -24,7 +24,6 @@ public:
 	std::vector<char> qual;
 	std::vector<std::string> names;
 	std::vector<std::string> readgroups;
-	std::vector<std::string> samples;
 	std::map<char,int> counts;
 	static int plp_get_read(void *data, bam1_t *b);
 	int next();

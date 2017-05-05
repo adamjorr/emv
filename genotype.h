@@ -9,7 +9,7 @@ class Genotype{
 protected:
 	std::map<char,int> gt;
 	int ploidy;
-	static void enumerate_gts(std::vector<Genotype> v, int stopallele, int ploidy, std::string genotype);
+	static void enumerate_gts(std::vector<Genotype> v, int stopallele, unsigned int ploidy, std::string genotype);
 	static const std::vector<char> alleles;
 public:
 	Genotype(std::string gtstr);

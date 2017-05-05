@@ -26,7 +26,7 @@ int Genotype::getploidy(){
 }
 
 //check out http://genome.sph.umich.edu/wiki/Relationship_between_Ploidy,_Alleles_and_Genotypes
-void Genotype::enumerate_gts(std::vector<Genotype> v, int stopallele, int ploidy, std::string genotype){
+void Genotype::enumerate_gts(std::vector<Genotype> v, int stopallele, unsigned int ploidy, std::string genotype){
 	if (genotype.length()==ploidy){
 		v.push_back(Genotype(genotype));
 	}

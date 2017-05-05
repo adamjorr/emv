@@ -6,8 +6,8 @@
 #include <map>
 #include "pileup.h"
 
-typedef std::tuple<std::vector<char>,std::map<char,int>,std::vector<char>,std::vector<std::string>> pileuptuple_t; //(bases, counts, qualities, readgroups)
-typedef std::vector<std::vector<pileuptuple_t>> pileupdata_t; //data[tid][pos] = (bases, counts, qualities, readgroups)
+typedef std::tuple<std::vector<char>,std::map<char,int>,std::vector<char>,std::vector<std::string> > pileuptuple_t; //(bases, counts, qualities, readgroups)
+typedef std::vector<std::vector<pileuptuple_t> > pileupdata_t; //data[tid][pos] = (bases, counts, qualities, readgroups)
 
 
 //class for slurping in pileup data

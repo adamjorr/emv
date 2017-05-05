@@ -12,8 +12,8 @@ typedef std::tuple<long double> theta_t; //mu parameter
 class Seqem{
 protected:
 	Pileupdata plp;
-	EM<long double> em;
 	theta_t theta;
+	EM<long double> em;
 	int ploidy;
 	std::vector<Genotype> possible_gts;
 public:
