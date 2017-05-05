@@ -33,12 +33,10 @@ int Pileup::next(){
 		for (int i = 0; i < cov; ++i){
 			bam1_t* alignment = pileup[i].b;
 			uint8_t* seq = bam_get_seq(alignment);
-			char* rg = bam_aux2Z(bam_aux_get(alignment, "RG"));
 			int qpos = pileup[i].qpos;
 			int baseint = bam_seqi(seq,qpos);
 			char allele = seq_nt16_str[baseint];
 			std::string name(bam_get_qname(alignment));
-			std::string readgroup(rg);
 			std::cout<< "got variables OK" << std::endl;
 			alleles[i] = allele;
 			++counts[allele];
@@ -47,10 +45,22 @@ int Pileup::next(){
 			std::cout << "set qualities OK" << std::endl;
 			names[i] = name;
 			std::cout << "set names OK" << std::endl;
-			std::cout << "readgroup = " << readgroup << std::endl;
-			readgroups[i] = readgroup;
+
+
+			// if (rg == NULL){
+			// 	readgroups[i] = "";
+			// }
+			// else{
+			// 	char* readgroup = bam_aux2Z(rg);
+			// 	if (readgroup != NULL){
+			// 		readgroups[i] = std::string(readgroup);
+			// 	}
+			// }
+
+			readgroups[i] = std::string(bam_aux2Z(bam_aux_get(alignment, "RG")))2;
+
 			std::cout<< "set readgroups OK" << std::endl;
-			bam_destroy1(alignment);
+			// bam_destroy1(alignment);
 		}
 		return 1;
 	} else {
