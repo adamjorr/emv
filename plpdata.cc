@@ -13,16 +13,15 @@ Pileupdata::Pileupdata(Pileup p) : plp(p), data() {
 	populate_data();
 }
 
+//I'll need to think of something better; this will break if the pileup isn't completely contiguous (ie multiple ranges)
 void Pileupdata::populate_data(){
 	std::map<std::string,int> chrs = plp.get_name_map();
-	data.reserve(chrs.size());
 	while(plp.next() != 0){
 		int tid = plp.get_tid();
 		int pos = plp.get_pos();
-		data[tid].reserve(pos + 1);
-		std::cout << "tid is: " << tid << " and pos is: " << pos << std::endl;
-		data[tid][pos] = std::make_tuple(plp.alleles,plp.counts,plp.qual,plp.readgroups);
-		std::cout << "made it out alive" << std::endl;
+		
+		data.resize(tid + 1);
+		data[tid].push_back(std::make_tuple(plp.alleles,plp.counts,plp.qual,plp.readgroups));
 	}
 }
 

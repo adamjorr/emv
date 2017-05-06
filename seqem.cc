@@ -2,11 +2,13 @@
 #include <cmath>
 #include <functional>
 #include <algorithm>
+#include <iostream>
 
 Seqem::Seqem(std::string samfile, std::string refname, int ploidy) : 
-	theta(std::make_tuple(0)),
+	plp(samfile,refname), theta(std::make_tuple(0)),
 	em(std::bind(&Seqem::q_function, this, std::placeholders::_1), std::bind(&Seqem::m_function,this,std::placeholders::_1), theta),
-	plp(samfile,refname), ploidy(ploidy) {
+	ploidy(ploidy) {
+	std::cout << "Constructing Seqem object..." << std::endl;
 	possible_gts = Genotype::enumerate_gts(ploidy);
 };
 
@@ -33,7 +35,6 @@ long double Seqem::q_function(theta_t theta){
 }
 
 theta_t Seqem::m_function(theta_t theta){
-	long double mu = std::get<0>(theta);
 	pileupdata_t plpdata = plp.get_data();
 	std::vector<long double> s(3,0); //TODO:make this generic, depends on ploidy
 
@@ -76,7 +77,6 @@ std::vector<long double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t 
 }
 
 long double Seqem::pg_given_xtheta(Genotype g, std::vector<char> x, theta_t theta){
-	long double mu = std::get<0>(theta);
 	long double p = px_given_gtheta(x,g,theta) + pg(g);
 	for (std::vector<Genotype>::iterator i = possible_gts.begin(); i != possible_gts.end(); ++i){
 		p -= px_given_gtheta(x,*i,theta) + pg(*i);
@@ -87,7 +87,6 @@ long double Seqem::pg_given_xtheta(Genotype g, std::vector<char> x, theta_t thet
 //may be faster if we represent x as a map w/ char and counts, like gt?? we support this in plpdata
 long double Seqem::px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta){
 	long double p = 0;
-	long double mu = std::get<0>(theta);
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
 		p += pn_given_gtheta(*i, g, theta);
 	}

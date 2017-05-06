@@ -27,7 +27,7 @@ public:
 //definition of template class must be in h file
 
 template<typename...T>
-EM<T...>::EM(std::function<long double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta) : q_function(q_function), m_function(m_function), likelihood(0), theta(theta){
+EM<T...>::EM(std::function<long double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta) : likelihood(0), q_function(q_function), m_function(m_function), theta(theta){
 }
 
 template<typename...T>
