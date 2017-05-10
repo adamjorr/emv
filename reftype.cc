@@ -1,5 +1,6 @@
 #include "reftype.h"
 #include <stdexcept>
+#include <stdlib.h>
 
 Reftype::Reftype(std::string reference_name){
 	faidx_t* faidx = fai_load(reference_name.c_str());
@@ -15,9 +16,6 @@ Reftype::Reftype(faidx_t* faidx_p) : faidx_p(faidx_p) {
 Reftype::~Reftype(){
 	if (faidx_p != nullptr){
 		fai_destroy(faidx_p);
-	}
-	if (ref_p != nullptr){
-		free(ref_p);
 	}
 }
 

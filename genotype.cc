@@ -1,5 +1,7 @@
 #include "genotype.h"
 
+const std::vector<char> Genotype::alleles = {'A','T','G','C'};
+
 Genotype::Genotype(std::string gtstr) : gt(), ploidy(0) {
 	for(auto it = gtstr.begin(); it != gtstr.end(); ++it){
 		++gt[*it];
@@ -26,13 +28,13 @@ int Genotype::getploidy(){
 }
 
 //check out http://genome.sph.umich.edu/wiki/Relationship_between_Ploidy,_Alleles_and_Genotypes
-void Genotype::enumerate_gts(std::vector<Genotype> v, int stopallele, unsigned int ploidy, std::string genotype){
-	if (genotype.length()==ploidy){
+void Genotype::enumerate_gts(std::vector<Genotype> &v, int stopallele, unsigned int ploidy, std::string genotype){
+	if (genotype.length() == ploidy){
 		v.push_back(Genotype(genotype));
 	}
 	else{
 		for (int i = 0; i < stopallele; ++i){
-			std::string s(&alleles[i]);
+			std::string s(1,alleles[i]);
 			s.append(genotype);
 			enumerate_gts(v,i+1, ploidy, s);
 		}
@@ -41,11 +43,11 @@ void Genotype::enumerate_gts(std::vector<Genotype> v, int stopallele, unsigned i
 
 std::vector<Genotype> Genotype::enumerate_gts(int ploidy){
 	std::vector<Genotype> v;
-	enumerate_gts(v,alleles.size(),ploidy,"");
+	enumerate_gts(v,alleles.size(),ploidy,std::string());
 	return v;
 }
 
-const std::vector<char> Genotype::alleles = {'A','T','G','C'};
+
 
 
 

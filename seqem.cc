@@ -8,7 +8,6 @@ Seqem::Seqem(std::string samfile, std::string refname, int ploidy) :
 	plp(samfile,refname), theta(std::make_tuple(0)),
 	em(std::bind(&Seqem::q_function, this, std::placeholders::_1), std::bind(&Seqem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy) {
-	std::cout << "Constructing Seqem object..." << std::endl;
 	possible_gts = Genotype::enumerate_gts(ploidy);
 };
 
@@ -26,11 +25,20 @@ long double Seqem::q_function(theta_t theta){
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
 			std::vector<char> x = std::get<0>(*pos);
+			// std::cout << possible_gts.size() << std::endl;
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-				p += exp(pg_given_xtheta(*g, x, theta)) * (px_given_gtheta(x, *g, theta) + pg(*g));		
+				// p += exp(pg_given_xtheta(*g, x, theta)) * (px_given_gtheta(x, *g, theta) + pg(*g));
+				long double a = pg_given_xtheta(*g, x, theta);
+				long double b = px_given_gtheta(x, *g, theta);
+				long double c = pg(*g);
+				p += exp(a) * (b + c);
+				std::cout << "P(G | X, T) = " << a << std::endl;
+				std::cout << "P(X | G, T) = " << b << std::endl;
+				std::cout << "P(G) = " << c << std::endl;
 			}
 		}
 	}
+	// std::cout << "Likelihood returned is: " << p << std::endl;
 	return p;
 }
 
@@ -51,6 +59,10 @@ theta_t Seqem::m_function(theta_t theta){
 		}
 	}
 
+	//scale to prevent underflow
+	// std::vector<long double>::iterator smallest = std::min_element(s.begin(),s.end());
+
+	//exponentiate to calculate mu
 	std::transform(s.begin(), s.end(), s.begin(), exp);
 
 	long double mu_plus = (1.5 * s[0] + s[1] + 1.5 * s[2] + sqrt(std::pow(1.5 * s[0] + s[1] - .5 * s[2],2) - 2 * s[1] * s[2])) / (6 * s[0] + 6 * s[1] + 2 * s[2]);
@@ -95,7 +107,8 @@ long double Seqem::px_given_gtheta(std::vector<char> x, Genotype g, theta_t thet
 
 long double Seqem::pn_given_gtheta(char n, Genotype g, theta_t theta){
 	long double mu = std::get<0>(theta);
-	return log(g.numbase(n)/g.getploidy()*(1-3*mu) + g.numnotbase(n)/g.getploidy()*mu);
+	long double p = g.numbase(n)/g.getploidy()*(1-3*mu) + g.numnotbase(n)/g.getploidy()*mu;
+	return p == 0 ? p : log(p);
 }
 
 long double Seqem::pg(Genotype g){

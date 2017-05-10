@@ -41,14 +41,17 @@ long double EM<T...>::likelihood_diff(long double previous, long double current)
 
 template<typename...T>
 std::tuple<T...> EM<T...>::start(long double stop){
+	int counter = 0;
 	long double difference;
 	do{
 		long double currentlike = q_function(theta);
-		std::clog << "Theta: " << theta << "likelihood: " << currentlike << std::endl;
+		std::clog << "Theta: " << theta << " likelihood: " << currentlike << std::endl;
 		difference = likelihood_diff(likelihood, currentlike);
 		likelihood = currentlike;
 		theta = m_function(theta);
-	} while (difference < stop);
+	} while (difference > stop);
+		// counter++;
+	// } while (counter < 10);
 	return theta;
 }
 
