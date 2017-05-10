@@ -75,13 +75,14 @@ std::vector<long double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t 
 	std::vector<long double> s(3,0);
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
 		long double pn = pn_given_gtheta(*i, g, theta);
-		if (pn == log(1 - 3 * mu)){
+		pn = exp(pn);
+		if (pn == (1 - 3 * mu)){
 			s[0]++;
 		}
-		else if (pn == log(.5 - mu)){
+		else if (pn == (.5 - mu)){
 			s[1]++;
 		}
-		else if (pn == log(mu)){
+		else if (pn == (mu)){
 			s[2]++;
 		}
 	}
@@ -108,7 +109,7 @@ long double Seqem::px_given_gtheta(std::vector<char> x, Genotype g, theta_t thet
 long double Seqem::pn_given_gtheta(char n, Genotype g, theta_t theta){
 	long double mu = std::get<0>(theta);
 	long double p = g.numbase(n)/g.getploidy()*(1-3*mu) + g.numnotbase(n)/g.getploidy()*mu;
-	return p == 0 ? p : log(p);
+	return p <= 0 ? 0 : log(p);
 }
 
 long double Seqem::pg(Genotype g){
