@@ -47,8 +47,17 @@ std::vector<Genotype> Genotype::enumerate_gts(int ploidy){
 	return v;
 }
 
+std::string Genotype::to_string() const{
+	std::string s;
+	for(auto it = gt.begin(); it != gt.end(); ++it){
+		s.append(it->second,it->first);
+	}
+	return s;
+}
 
-
+std::ostream& operator<<(std::ostream& os, const Genotype gt){
+	return os << gt.to_string();
+}
 
 
 

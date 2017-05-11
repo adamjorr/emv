@@ -32,7 +32,10 @@ EM<T...>::EM(std::function<long double(std::tuple<T...>)> q_function, std::funct
 
 template<typename...T>
 long double EM<T...>::likelihood_diff(long double previous, long double current){
-	if (current < previous){
+	if (previous == 0){
+		return (current > 0 ? current : -current);
+	}
+	else if (current < previous){
 		throw std::logic_error("likelihood went down. previous value: " + std::to_string(previous) + ", current value: " + std::to_string(current));
 	} else {
 		return current - previous;

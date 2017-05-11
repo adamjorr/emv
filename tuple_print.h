@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 //check out http://en.cppreference.com/w/cpp/utility/tuple/tuple_cat for another example
 // also http://stackoverflow.com/questions/6245735/pretty-print-stdtuple
@@ -31,6 +32,22 @@ std::ostream& operator<<(std::ostream& os, const std::tuple<T0, T...> t){
 }
 
 std::ostream& operator<<(std::ostream& os, const std::tuple<>);
+
+
+//Vector printing
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T> vec){
+	if(vec.size() == 0){
+		return os << "[ ]";
+	}
+	else{
+		os << "[ " << vec[0];
+		for (int i = 1; i < vec.size(); ++i){
+			os << ", " << vec[i];
+		}
+		return os << " ]";
+	}
+}
 
 
 #endif

@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <iostream>
 
 class Genotype{
 protected:
@@ -17,9 +18,11 @@ public:
 	int numbase(char n);
 	int numnotbase(char n);
 	int getploidy();
+	std::string to_string() const;
 	static std::vector<Genotype> enumerate_gts(int ploidy);
 };
 
+std::ostream& operator<<(std::ostream& os, const Genotype);
 
 #endif
 

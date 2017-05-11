@@ -1,11 +1,11 @@
 #include "plpdata.h"
 #include "iostream"
 
-Pileupdata::Pileupdata(std::string filename, std::string refname, std::string region) : plp(filename, refname, region), data(1, std::vector<pileuptuple_t>(1)) {
+Pileupdata::Pileupdata(std::string filename, std::string refname, std::string region) : plp(filename, refname, region), data() {
 	populate_data();
 }
 
-Pileupdata::Pileupdata(std::string filename, std::string refname) : plp(filename, refname), data(1, std::vector<pileuptuple_t>(1)) {
+Pileupdata::Pileupdata(std::string filename, std::string refname) : plp(filename, refname), data() {
 	populate_data();
 }
 
