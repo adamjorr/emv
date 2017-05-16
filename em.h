@@ -36,7 +36,9 @@ long double EM<T...>::likelihood_diff(long double previous, long double current)
 		return (current > 0 ? current : -current);
 	}
 	else if (current < previous){
-		throw std::logic_error("likelihood went down. previous value: " + std::to_string(previous) + ", current value: " + std::to_string(current));
+		// throw std::logic_error("likelihood went down. previous value: " + std::to_string(previous) + ", current value: " + std::to_string(current));
+		std::clog << "Likelihood decreased!" << std::endl;
+		return current - previous;
 	} else {
 		return current - previous;
 	}
@@ -52,9 +54,9 @@ std::tuple<T...> EM<T...>::start(long double stop){
 		difference = likelihood_diff(likelihood, currentlike);
 		likelihood = currentlike;
 		theta = m_function(theta);
-	} while (difference > stop);
-		// counter++;
-	// } while (counter < 10);
+	// } while (difference > stop);
+		counter++;
+	} while (counter < 20);
 	return theta;
 }
 
