@@ -9,7 +9,7 @@
 #include <limits>
 
 Seqem::Seqem(std::string samfile, std::string refname, int ploidy) : 
-	plp(samfile,refname), theta(std::make_tuple(0)),
+	plp(samfile,refname), theta(std::make_tuple(0.1l)),
 	em(std::bind(&Seqem::q_function, this, std::placeholders::_1), std::bind(&Seqem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy) {
 	possible_gts = Genotype::enumerate_gts(ploidy);
@@ -46,9 +46,9 @@ long double Seqem::q_function(theta_t theta){
 					std::cout << "P(G) = " << c << "\tG=" << *g << "\tT=" << theta << std::endl; // log
 				}
 				// if (errno){
-				// 	std::cout << "P(G | X, T) = " << a << std::endl;
-				// 	std::cout << "P(X | G, T) = " << b << std::endl;
-				// 	std::cout << "P(G) = " << c << std::endl;
+				// 	// std::cout << "P(G | X, T) = " << a << std::endl;
+				// 	// std::cout << "P(X | G, T) = " << b << std::endl;
+				// 	// std::cout << "P(G) = " << c << std::endl;
 				// 	std::cout << "p = " << p << std::endl;
 				// 	// std::cout << std::strerror(errno) << std::endl;
 				// 	throw std::runtime_error(std::strerror(errno));
@@ -62,19 +62,17 @@ long double Seqem::q_function(theta_t theta){
 
 theta_t Seqem::m_function(theta_t theta){
 	pileupdata_t plpdata = plp.get_data();
-	std::vector<long double> s(3,0); //TODO:make this generic, depends on ploidy
+	std::vector<long double> s(3,0.0l); //TODO:make this generic, depends on ploidy
 
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
 			std::vector<char> x = std::get<0>(*pos);
-			std::map<char,int> x_counts = std::get<1>(*pos);
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-				std::vector<long double> site_s = calc_s(x,*g,theta); //this would probably work better as a map: s[pn] += pg_given_xtheta + pn for each n
+				std::vector<long double> site_s = calc_s(x,*g,theta);
 				long double pg = pg_given_xtheta(*g,x,theta);
-				if (pg != 0){
-					for(int i = 0; i < s.size(); ++i){
-						s[i] += pg * site_s[i];	
-					}
+				// std::clog << "pg_given_xtheta = " << pg << "\tsite_s = " << site_s << std::endl;
+				for(int i = 0; i < s.size(); ++i){
+					s[i] += pg * site_s[i];	
 				}
 			}
 		}
@@ -82,16 +80,21 @@ theta_t Seqem::m_function(theta_t theta){
 
 	// scale to prevent underflow
 	long double smallest = smallest_nonzero(s);
-	if (smallest == 0){ //there SHOULD always be an s > 0.
-		std::clog << "s: " << s << std::endl;
-		throw std::logic_error("All s == 0, this should never happen.");
+	if (smallest != 0){ //there SHOULD always be an s > 0.
+		std::transform(s.begin(),s.end(),s.begin(),[smallest](long double d){ return d / smallest; });
 	}
-	// std::clog << "s: " << s;
-	std::transform(s.begin(),s.end(),s.begin(),[smallest](long double d){ return d / smallest; });
-	// std::clog << " => S: " << s << std::endl;
 
-	long double mu_plus = (1.5l * s[0] + s[1] + 1.5l * s[2] + sqrt(std::pow(1.5l * s[0] + s[1] - .5l * s[2],2.0l) - 2.0l * s[1] * s[2])) / (6.0l * s[0] + 6.0l * s[1] + 2.0l * s[2]);
-	long double mu_minus = (1.5l * s[0] + s[1] + 1.5l * s[2] - sqrt(std::pow(1.5l * s[0] + s[1] - .5l * s[2],2.0l) - 2.0l * s[1] * s[2])) / (6.0l * s[0] + 6.0l * s[1] + 2.0l * s[2]);
+	//quadratic formula
+	long double a = (3l * s[0] + 3l * s[1] + s[2]);
+	long double b = - (3l/2 * s[0] + s[1] + 3l/2 * s[2]);
+	long double c = s[2] / 2;
+	long double mu_minus = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+	long double mu_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+
+	//substitute
+	// long double mu_minus = ((3l/2 * s[0] + s[1] + 3l/2 * s[2]) - sqrt(std::pow(- (3l/2 * s[0] + s[1] + 3l/2 * s[2]),2) - 4 * (3l * s[0] + 3l * s[1] + s[2]) * s[2] / 2))/(2 * (3l * s[0] + 3l * s[1] + s[2]));
+	// long double mu_plus = ((3l/2 * s[0] + s[1] + 3l/2 * s[2]) + sqrt(std::pow(- (3l/2 * s[0] + s[1] + 3l/2 * s[2]),2) - 4 * (3l * s[0] + 3l * s[1] + s[2]) * s[2] / 2))/(2 * (3l * s[0] + 3l * s[1] + s[2]));
+
 	if(errno){
 		std::clog << "Error calculating mu+ and mu-" << std::endl;
 		throw std::runtime_error(std::strerror(errno));
@@ -102,22 +105,18 @@ theta_t Seqem::m_function(theta_t theta){
 
 std::vector<long double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
 	long double mu = std::get<0>(theta);
-	std::vector<long double> s(3,0);
+	std::vector<long double> s(3,0.0l);
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
-		long double pn = exp(pn_given_gtheta(*i, g, theta));
-		if (pn == (1.0l - 3.0l * mu)){
+		int numgt = g.numbase(*i);
+		if (numgt == 2){
 			s[0]++;
 		}
-		else if (pn == (0.5l - mu)){
+		else if (numgt == 1){
 			s[1]++;
 		}
-		else if (pn == (mu)){
+		else if (numgt == 0){
 			s[2]++;
 		}
-	}
-	if(errno){
-		std::clog << "Error calculating s" << std::endl;
-		throw std::runtime_error(std::strerror(errno));
 	}
 	return s;
 }
@@ -129,6 +128,9 @@ long double Seqem::pg_given_xtheta(Genotype g, std::vector<char> x, theta_t thet
 	// 	return px;
 	// }
 	long double p = exp(px + pg(g));
+	if (p == 0){
+		return 0;
+	}
 	long double division_p = 0.0l;
 	// std::clog << "P(X | G, theta) = " << px_given_gtheta(x,g,theta) << std::endl; 
 	// std::clog << "P(X | G, theta) * P(G) = " << p << std::endl;
@@ -140,6 +142,14 @@ long double Seqem::pg_given_xtheta(Genotype g, std::vector<char> x, theta_t thet
 		// 	std::clog << "p: " << p << std::endl;
 		// 	throw std::runtime_error(std::strerror(errno));
 		// }
+	}
+	if (division_p == 0){
+		std::clog << "Error calculating pg_given_xtheta" << std::endl;
+		std::clog << "G=" << g << std::endl;
+		std::clog << "X=" << x << std::endl;
+		std::clog << "T=" << theta << std::endl;
+		std::clog << "p: " << p << std::endl;
+		throw std::runtime_error("pg_given_xtheta");
 	}
 	return p / division_p;
 }
@@ -180,6 +190,10 @@ long double Seqem::pn_given_gtheta(char n, Genotype g, theta_t theta){
 	// std::clog << "N=" << n << "\tGT=" << g << "\tPloidy=" << g.getploidy() << "\t#N=" << g.numbase(n) << "\t#!N=" << g.numnotbase(n) << "\tP1=" << ((long double)g.numbase(n))/g.getploidy()*(1-3*mu) << "\tP2=" << ((long double)g.numnotbase(n))/g.getploidy()*mu << "\tP=" << p << "\tTheta=" << theta << std::endl;
 	if (p == 0){
 		return -std::numeric_limits<long double>::infinity();
+	}
+	else if (p < 0){
+		std::clog << "N=" << n << "\tGT=" << g << "\tPloidy=" << g.getploidy() << "\t#N=" << g.numbase(n) << "\t#!N=" << g.numnotbase(n) << "\tP1=" << ((long double)g.numbase(n))/g.getploidy()*(1-3*mu) << "\tP2=" << ((long double)g.numnotbase(n))/g.getploidy()*mu << "\tP=" << p << "\tTheta=" << theta << std::endl;
+		throw std::runtime_error("p < 0 detected");
 	}
 	else{
 		return log(p);

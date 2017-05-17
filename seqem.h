@@ -27,7 +27,7 @@ public:
 	long double px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta); // log space
 	static long double pn_given_gtheta(char n, Genotype g, theta_t theta); //log space
 	long double pg(Genotype g); //log space
-	long double smallest_nonzero(std::vector<long double> v);
+	long double smallest_nonzero(const std::vector<long double> v);
 };
 
 
