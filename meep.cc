@@ -10,8 +10,42 @@ int main(int argc, char *argv[]){
 	Seqem seq("foo.sam","testdata/test.fa");
 
 	// Genotype g("CC");
-	// std::vector<char> x(26,'C');
-	// std::tuple<long double> theta = std::make_tuple(0.0l);
+	std::vector<char> x(9,'C');
+	x.push_back('A');
+	std::tuple<double> theta = std::make_tuple(0.01);
+	int counter = 0;
+	std::cout << "X = " << x << std::endl;
+	std::cout << "Theta = " << theta << "\t3 * Theta = " << std::get<0>(theta) * 3;
+	while (counter < 10){
+		double likelihood = 0.0;
+		std::vector<double> s(3,0.0);
+		for (Genotype g : Genotype::enumerate_gts(2)){
+			//calc likelihood
+			double b = seq.px_given_gtheta(x, g, theta); // log
+			double c = seq.pg(g); //log
+			likelihood += exp(b + c);
+
+			//calc s
+			std::vector<double> site_s = seq.calc_s(x,g,theta);
+			double pg_x = seq.pg_x_given_theta(g,x,theta);
+			for(int i = 0; i < s.size(); ++i){
+				s[i] += pg_x * site_s[i];	
+			}
+		}
+
+		double a = (3.0 * s[0] + 3.0 * s[1] + s[2]);
+		double b = - (3.0/2 * s[0] + s[1] + 3.0/2 * s[2]);
+		double c = s[2] / 2;
+		double mu = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+		theta = std::make_tuple(mu);
+
+		std::cout << "\tLikelihood = " << likelihood << std::endl;
+		std::cout << "Theta = " << theta << "\t3 * Theta = " << std::get<0>(theta) * 3;
+		counter++;
+	}
+	std::cout << std::endl;
+	return 0;
+
 	// long double p = 0.0l;
 	// std::cout << "P(G | X, T ) = " << seq.pg_given_xtheta(g,x,theta) << std::endl;
 	// std::cout << "px = " << seq.px_given_gtheta(x,g,theta) << std::endl;
@@ -26,7 +60,7 @@ int main(int argc, char *argv[]){
 	// return 0;
 
 
-	std::tuple<long double> result = seq.start(.00001);
+	std::tuple<double> result = seq.start(.00001);
 	std::cout << "Theta is: " << std::get<0>(result) << std::endl;
 	return 0;
 }

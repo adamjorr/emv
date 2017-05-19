@@ -1,7 +1,6 @@
 notes
 ========
 
-change long doubles ==> double
 change maps to ==> unordered map
 
 for every site:

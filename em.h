@@ -13,25 +13,25 @@
 template<typename... T>
 class EM{
 protected:
-	long double q;
+	double likelihood;
 	std::tuple<T...> theta;
-	std::function<long double(std::tuple<T...> theta)> q_function; //returns expected value of log likelihood function
+	std::function<double(std::tuple<T...> theta)> q_function; //returns expected value of log likelihood function
 	std::function<std::tuple<T...>(std::tuple<T...> theta)> m_function; //returns theta that maximizes Q	
-	long double q_diff(long double, long double);
+	double likelihood_diff(double, double);
 public:
-	EM(std::function<long double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta); //initialize with guess for theta
-	std::tuple<T...> start(long double stop); //start the EM. return theta.
-	long double get_q();
+	EM(std::function<double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta); //initialize with guess for theta
+	std::tuple<T...> start(double stop); //start the EM. return theta.
+	double get_likelihood();
 };
 
 //definition of template class must be in h file
 
 template<typename...T>
-EM<T...>::EM(std::function<long double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta) : q(0), q_function(q_function), m_function(m_function), theta(theta){
+EM<T...>::EM(std::function<double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta) : likelihood(0), q_function(q_function), m_function(m_function), theta(theta){
 }
 
 template<typename...T>
-long double EM<T...>::q_diff(long double previous, long double current){
+double EM<T...>::likelihood_diff(double previous, double current){
 	if (previous == 0){
 		return (current > 0 ? current : -current);
 	}
@@ -45,14 +45,14 @@ long double EM<T...>::q_diff(long double previous, long double current){
 }
 
 template<typename...T>
-std::tuple<T...> EM<T...>::start(long double stop){
+std::tuple<T...> EM<T...>::start(double stop){
 	int counter = 0;
-	long double difference;
+	double difference;
 	do{
-		long double current_q = q_function(theta);
-		std::clog << "Theta = " << theta << "\tlikelihood = " << current_q << std::endl;
-		difference = q_diff(q, current_q);
-		q = current_q;
+		double current_likelihood = q_function(theta);
+		std::clog << "Theta = " << theta << "\tlikelihood = " << current_likelihood << std::endl;
+		difference = likelihood_diff(likelihood, current_likelihood);
+		likelihood = current_likelihood;
 		theta = m_function(theta);
 	// } while (difference > stop);
 		counter++;
@@ -61,8 +61,8 @@ std::tuple<T...> EM<T...>::start(long double stop){
 }
 
 template<typename...T>
-long double EM<T...>::get_q(){
-	return q;
+double EM<T...>::get_likelihood(){
+	return likelihood;
 }
 
 
