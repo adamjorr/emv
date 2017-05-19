@@ -1,0 +1,35 @@
+notes
+========
+
+change long doubles ==> double
+change maps to ==> unordered map
+
+for every site:
+	vector[10]
+	v[g] = p(data | G=g; theta) * p(G=g)
+	then normalize:
+		v[g]/sum(v[g])
+
+	s1 = [vector of size 10] s for each genotype (sbar = sum(s1 * v))
+	s2
+	s3s
+
+sum(v[g] across sites) = P(D;theta)
+
+
+=============
+
+l(g) = log P(D | g=g; t)
+
+l'(g) = l(g) - max(l(g))
+scale so most likely genotype is 1, then everything else relative to it
+then v[g] = exp(l'(g))
+keep max(l(g)) and add it in at the end to get true lnlike
+
+
+
+
+
+
+
+
