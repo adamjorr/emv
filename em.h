@@ -37,7 +37,7 @@ long double EM<T...>::q_diff(long double previous, long double current){
 	}
 	else if (current < previous){
 		// throw std::logic_error("likelihood went down. previous value: " + std::to_string(previous) + ", current value: " + std::to_string(current));
-		std::clog << "Q decreased by " << -(current - previous) << std::endl;
+		std::clog << "likelihood decreased by " << -(current - previous) << std::endl;
 		return current - previous;
 	} else {
 		return current - previous;
@@ -50,7 +50,7 @@ std::tuple<T...> EM<T...>::start(long double stop){
 	long double difference;
 	do{
 		long double current_q = q_function(theta);
-		std::clog << "Theta = " << theta << "\tQ = " << current_q << std::endl;
+		std::clog << "Theta = " << theta << "\tlikelihood = " << current_q << std::endl;
 		difference = q_diff(q, current_q);
 		q = current_q;
 		theta = m_function(theta);

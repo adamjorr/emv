@@ -23,7 +23,7 @@ public:
 	long double q_function(theta_t theta);
 	theta_t m_function(theta_t theta);
 	static std::vector<long double> calc_s(std::vector<char> x, Genotype g, theta_t theta);
-	long double pg_given_xtheta(Genotype g, std::vector<char> x, theta_t theta); //not log space
+	long double pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta); //not log space
 	long double px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta); // log space
 	static long double pn_given_gtheta(char n, Genotype g, theta_t theta); //log space
 	long double pg(Genotype g); //log space
