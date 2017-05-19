@@ -124,16 +124,32 @@ long double Seqem::pg_given_xtheta(Genotype g, std::vector<char> x, theta_t thet
 //may be faster if we represent x as a map w/ char and counts, like gt?? we support this in plpdata
 long double Seqem::px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta){
 	long double px = 0.0l;
+	std::map<char, int> counts;
+
+	std::cout << "X = " << x << std::endl;
+	std::cout << "G = " << g << std::endl;
+	std::cout << "T = " << theta << std::endl;
+
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
-		long double pn = pn_given_gtheta(*i,g,theta);
+		counts[*i] += 1;
+	}
+
+	std::cout << "Counts = " << counts << std::endl;
+
+	for (std::map<char,int>::iterator i = counts.begin(); i!= counts.end(); ++i){
+		long double pn = pn_given_gtheta(i->first,g,theta);
 		if (pn == -std::numeric_limits<long double>::infinity()){
 			return -std::numeric_limits<long double>::infinity();
 		}
 		else{
-			px += pn_given_gtheta(*i, g, theta);
+			px += i->second * pn_given_gtheta(i->first, g, theta);
+			px -= std::lgamma(i->second + 1);
 		}
 	}
-	px += log(factorial(x.size())/factorial() ;
+	px += std::lgamma(x.size()+1);
+
+	std::cout << "P(X | G, T) = " << px << std::endl;
+
 	return px;
 }
 

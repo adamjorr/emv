@@ -6,6 +6,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <map>
 
 //check out http://en.cppreference.com/w/cpp/utility/tuple/tuple_cat for another example
 // also http://stackoverflow.com/questions/6245735/pretty-print-stdtuple
@@ -46,6 +47,22 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T> vec){
 			os << ", " << vec[i];
 		}
 		return os << " ]";
+	}
+}
+
+//Map printing
+template<typename T, typename U>
+std::ostream& operator<<(std::ostream& os, const std::map<T,U> m){
+	if(m.size() == 0){
+		return os << "{ }";
+	}
+	else{
+		auto i = m.begin();
+		os << "{ " << i->first << ":" << i->second;
+		for(++i; i != m.end(); ++i){
+			os << ", " << i->first <<  ":" << i->second;
+		}
+		return os << " }";
 	}
 }
 
