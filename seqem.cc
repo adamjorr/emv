@@ -55,7 +55,7 @@ theta_t Seqem::m_function(theta_t theta){
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
 				std::vector<double> site_s = calc_s(x,*g,theta);
 				double pg_x = pg_x_given_theta(*g,x,theta);
-				for(int i = 0; i < s.size(); ++i){
+				for(size_t i = 0; i < s.size(); ++i){
 					s[i] += pg_x * site_s[i];	
 				}
 			}
@@ -73,7 +73,7 @@ theta_t Seqem::m_function(theta_t theta){
 	double b = - (3.0/2 * s[0] + s[1] + 5.0/2 * s[2]);
 	double c = s[2] / 2;
 	double epsilon_minus = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
-	double epsilon_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+	// double epsilon_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
 	double epsilon;
 	if (epsilon_minus < 0){
 		epsilon = 0;
@@ -85,7 +85,6 @@ theta_t Seqem::m_function(theta_t theta){
 }
 
 std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
-	double epsilon = std::get<0>(theta);
 	std::vector<double> s(3,0.0);
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
 		int numgt = g.numbase(*i);

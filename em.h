@@ -14,9 +14,9 @@ template<typename... T>
 class EM{
 protected:
 	double likelihood;
-	std::tuple<T...> theta;
 	std::function<double(std::tuple<T...> theta)> q_function; //returns expected value of log likelihood function
 	std::function<std::tuple<T...>(std::tuple<T...> theta)> m_function; //returns theta that maximizes Q	
+	std::tuple<T...> theta;
 	double likelihood_diff(double, double);
 public:
 	EM(std::function<double(std::tuple<T...>)> q_function, std::function<std::tuple<T...>(std::tuple<T...>)> m_function, std::tuple<T...> theta); //initialize with guess for theta
