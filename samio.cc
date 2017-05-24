@@ -1,6 +1,10 @@
 #include "samio.h"
 #include <stdexcept>
 
+SamReader::SamReader(nullptr_t nullp) : in(nullptr), idx(nullptr), iter(nullptr), header(nullptr){
+}
+
+
 SamReader::SamReader() : in(), header(), idx(), iter(), region(), region_exists(){
 	open("-");
 	this->region_exists = false;

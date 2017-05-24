@@ -17,6 +17,8 @@ protected:
 	int ploidy;
 	std::vector<Genotype> possible_gts;
 public:
+	Seqem(Pileupdata p, int ploidy);
+	Seqem(Pileupdata p);
 	Seqem(std::string samfile, std::string refname);
 	Seqem(std::string samfile, std::string refname, int ploidy);
 	theta_t start(double stop);

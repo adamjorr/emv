@@ -1,6 +1,7 @@
 #include "pileup.h"
 #include <htslib/sam.h>
 #include "samio.h"
+#include <iostream>
 
 Pileup::Pileup(std::string samfile, std::string reffile): reader(samfile), ref(reffile), tid(), pos(), cov(), pileup(nullptr), iter(), alleles(), qual(), names(), readgroups(), counts({{'A',0},{'T',0},{'G',0},{'C',0}})  {
 	iter = bam_plp_init(&Pileup::plp_get_read, &reader);
@@ -10,8 +11,13 @@ Pileup::Pileup(std::string samfile, std::string reffile, std::string region): re
 	iter = bam_plp_init(&Pileup::plp_get_read, &reader);
 }
 
+Pileup::Pileup() : reader(nullptr), iter(nullptr) {
+}
+
 Pileup::~Pileup(){
-	bam_plp_destroy(iter);
+	if (iter != nullptr){
+		bam_plp_destroy(iter);
+	}
 }
 
 //typedef int (*bam_plp_auto_f)(void *data, bam1_t *b);

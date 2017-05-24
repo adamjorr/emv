@@ -1,5 +1,6 @@
 #include "plpdata.h"
-#include "iostream"
+#include <iostream>
+#include <vector>
 
 Pileupdata::Pileupdata(std::string filename, std::string refname, std::string region) : plp(filename, refname, region), data() {
 	populate_data();
@@ -13,13 +14,26 @@ Pileupdata::Pileupdata(Pileup p) : plp(p), data() {
 	populate_data();
 }
 
+Pileupdata::Pileupdata(std::vector<char> x, std::vector<char> quals) : plp(), data(){
+	std::map<char,int> counts = {{'A',0},{'T',0},{'G',0},{'C',0}};
+	std::vector<std::string> rgs(x.size(),"RG0");
+	for (char i : x){
+		std:: cout << i << std::endl;
+		++counts[i];
+	}
+	data.resize(1);
+	std::vector<pileuptuple_t> v(1,std::make_tuple(x,counts,quals,rgs));
+	data.push_back(v);
+}
+
+Pileupdata::Pileupdata(std::vector<char> x) : Pileupdata(x, x) {
+}
+
 //I'll need to think of something better; this will break if the pileup isn't completely contiguous (ie multiple ranges)
 void Pileupdata::populate_data(){
 	std::map<std::string,int> chrs = plp.get_name_map();
 	while(plp.next() != 0){
-		int tid = plp.get_tid();
-		int pos = plp.get_pos();
-		
+		int tid = plp.get_tid();		
 		data.resize(tid + 1);
 		data[tid].push_back(std::make_tuple(plp.alleles,plp.counts,plp.qual,plp.readgroups));
 	}

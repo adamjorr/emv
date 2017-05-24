@@ -13,6 +13,9 @@ Reftype::Reftype(std::string reference_name){
 Reftype::Reftype(faidx_t* faidx_p) : faidx_p(faidx_p) {
 }
 
+Reftype::Reftype() : faidx_p(nullptr){
+}
+
 Reftype::~Reftype(){
 	if (faidx_p != nullptr){
 		fai_destroy(faidx_p);

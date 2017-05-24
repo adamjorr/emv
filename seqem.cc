@@ -8,15 +8,20 @@
 #include <cstring>
 #include <limits>
 
-Seqem::Seqem(std::string samfile, std::string refname, int ploidy) : 
-	plp(samfile,refname), theta(std::make_tuple(0.1)),
+Seqem::Seqem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1)),
 	em(std::bind(&Seqem::q_function, this, std::placeholders::_1), std::bind(&Seqem::m_function,this,std::placeholders::_1), theta),
-	ploidy(ploidy) {
+	ploidy(ploidy){
 	possible_gts = Genotype::enumerate_gts(ploidy);
-};
+}
+
+Seqem::Seqem(Pileupdata p): Seqem(p, 2){
+}
+
+Seqem::Seqem(std::string samfile, std::string refname, int ploidy) : Seqem(Pileupdata(samfile,refname), ploidy){
+}
 
 Seqem::Seqem(std::string samfile, std::string refname) : Seqem(samfile, refname, 2) {
-};
+}
 
 theta_t Seqem::start(double stop){
 	return em.start(stop);

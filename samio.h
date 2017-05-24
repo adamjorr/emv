@@ -6,6 +6,7 @@
 #include <htslib/sam.h>
 #include <string>
 #include <map>
+#include <cstddef>
 
 class SamReader{
 protected:
@@ -28,6 +29,7 @@ public:
 	SamReader();
 	SamReader(const std::string filename);
 	SamReader(const std::string filename, const std::string region);
+	SamReader(nullptr_t);
 	~SamReader();
 };
 

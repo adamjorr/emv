@@ -19,6 +19,7 @@ protected:
 public:
 	Pileup(std::string samfile, std::string reffile);
 	Pileup(std::string samfile, std::string reffile, std::string region);
+	Pileup();
 	~Pileup();
 	std::vector<char> alleles;
 	std::vector<char> qual;

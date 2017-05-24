@@ -25,6 +25,8 @@ public:
 	Pileupdata(std::string filename, std::string refname, std::string region);
 	Pileupdata(std::string filename, std::string refname);
 	Pileupdata(Pileup p);
+	Pileupdata(std::vector<char> x, std::vector<char> quals);
+	Pileupdata(std::vector<char> x);
 };
 
 
