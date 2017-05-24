@@ -72,20 +72,20 @@ theta_t Seqem::m_function(theta_t theta){
 	double a = 3.0 * (s[0] + s[1] + s[2]);
 	double b = - (3.0/2 * s[0] + s[1] + 5.0/2 * s[2]);
 	double c = s[2] / 2;
-	double mu_minus = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
-	double mu_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
-	double mu;
-	if (mu_minus < 0){
-		mu = 0;
+	double epsilon_minus = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+	double epsilon_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+	double epsilon;
+	if (epsilon_minus < 0){
+		epsilon = 0;
 	}
 	else{
-		mu = mu_minus;
+		epsilon = epsilon_minus;
 	}
-	return std::make_tuple(mu);
+	return std::make_tuple(epsilon);
 }
 
 std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
-	double mu = std::get<0>(theta);
+	double epsilon = std::get<0>(theta);
 	std::vector<double> s(3,0.0);
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
 		int numgt = g.numbase(*i);
@@ -132,24 +132,24 @@ double Seqem::px_given_gtheta(const std::vector<char> x,const Genotype g,const t
 
 //LOG SPACE
 double Seqem::pn_given_gtheta(char n, Genotype g, theta_t theta){
-	double mu = std::get<0>(theta);
+	double epsilon = std::get<0>(theta);
 	double p;
-	// p = ((double)g.numbase(n))/g.getploidy()*(1.0-3.0*mu) + ((double)g.numnotbase(n))/g.getploidy()*mu;
+	// p = ((double)g.numbase(n))/g.getploidy()*(1.0-3.0*epsilon) + ((double)g.numnotbase(n))/g.getploidy()*epsilon;
 	int numgt = g.numbase(n);
 	if (numgt == 2){
-		p = (1.0 - 3.0 * mu);
+		p = (1.0 - 3.0 * epsilon);
 	}
 	else if (numgt == 1){
-		p = (0.5 - mu);
+		p = (0.5 - epsilon);
 	}
 	else{
-		p = mu;
+		p = epsilon;
 	}
 	if (p == 0){
 		return -std::numeric_limits<double>::infinity();
 	}
 	else if (p < 0){
-		std::clog << "N=" << n << "\tGT=" << g << "\tPloidy=" << g.getploidy() << "\t#N=" << g.numbase(n) << "\t#!N=" << g.numnotbase(n) << "\tP1=" << ((double)g.numbase(n))/g.getploidy()*(1-3*mu) << "\tP2=" << ((double)g.numnotbase(n))/g.getploidy()*mu << "\tP=" << p << "\tTheta=" << theta << std::endl;
+		std::clog << "N=" << n << "\tGT=" << g << "\tPloidy=" << g.getploidy() << "\t#N=" << g.numbase(n) << "\t#!N=" << g.numnotbase(n) << "\tP1=" << ((double)g.numbase(n))/g.getploidy()*(1-3*epsilon) << "\tP2=" << ((double)g.numnotbase(n))/g.getploidy()*epsilon << "\tP=" << p << "\tTheta=" << theta << std::endl;
 		throw std::runtime_error("p < 0 detected");
 	}
 	else{
