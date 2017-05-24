@@ -18,7 +18,6 @@ Pileupdata::Pileupdata(std::vector<char> x, std::vector<char> quals) : plp(), da
 	std::map<char,int> counts = {{'A',0},{'T',0},{'G',0},{'C',0}};
 	std::vector<std::string> rgs(x.size(),"RG0");
 	for (char i : x){
-		std:: cout << i << std::endl;
 		++counts[i];
 	}
 	data.resize(1);

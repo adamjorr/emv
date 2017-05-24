@@ -34,14 +34,8 @@ double Seqem::q_function(theta_t theta){
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
 			const std::vector<char> &x = std::get<0>(*pos);
-			//create l[g] = logP(x | g; t)
-			// v[g] = exp(l[g]) * p(g)
-			//likelihood = sum v[g]
-			// g[g] = v[g] / likelihood
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-				double b = px_given_gtheta(x, *g, theta); // log
-				double c = pg(*g); //log
-				likelihood += exp(b + c);
+				likelihood += pg_x_given_theta(*g,x,theta);
 			}
 		}
 	}
@@ -66,18 +60,17 @@ theta_t Seqem::m_function(theta_t theta){
 	}
 
 	// scale to prevent underflow
-	double smallest = smallest_nonzero(s);
-	if (smallest != 0){ //there SHOULD always be an s > 0.
-		std::transform(s.begin(),s.end(),s.begin(),[smallest](double d){ return d / smallest; });
-	}
+	// double smallest = smallest_nonzero(s);
+	// if (smallest != 0){ //there SHOULD always be an s > 0.
+	// 	std::transform(s.begin(),s.end(),s.begin(),[smallest](double d){ return d / smallest; });
+	// }
 
 	//quadratic formula
-	double a = (3.0 * s[0] + 3.0 * s[1] + s[2]);
-	double b = - (3.0/2 * s[0] + s[1] + 3.0/2 * s[2]);
+	double a = 3.0 * (s[0] + s[1] + s[2]);
+	double b = - (3.0/2 * s[0] + s[1] + 5.0/2 * s[2]);
 	double c = s[2] / 2;
 	double mu_minus = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
 	double mu_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
-
 	double mu;
 	if (mu_minus < 0){
 		mu = 0;
@@ -107,26 +100,19 @@ std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta
 }
 
 //RESULT NOT IN LOG SPACE
-double Seqem::pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta){
+double Seqem::pg_x_given_theta(const Genotype g,const std::vector<char> x,const theta_t theta){
 	double px = px_given_gtheta(x,g,theta);
 	return exp(px + pg(g));
 }
 
 //may be faster if we represent x as a map w/ char and counts, like gt?? we support this in plpdata
-double Seqem::px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta){
+double Seqem::px_given_gtheta(const std::vector<char> x,const Genotype g,const theta_t theta){
 	double px = 0.0;
 	std::map<char, int> counts;
 
-	// std::cout << "X = " << x << std::endl;
-	// std::cout << "G = " << g << std::endl;
-	// std::cout << "T = " << theta << std::endl;
-
-	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
+	for (std::vector<char>::const_iterator i = x.begin(); i != x.end(); ++i){
 		counts[*i] += 1;
 	}
-
-	// std::cout << "Counts = " << counts << std::endl;
-
 	for (std::map<char,int>::iterator i = counts.begin(); i!= counts.end(); ++i){
 		double pn = pn_given_gtheta(i->first,g,theta);
 		if (pn == -std::numeric_limits<double>::infinity()){
@@ -134,13 +120,10 @@ double Seqem::px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta){
 		}
 		else{
 			px += i->second * pn;
-			px -= std::lgamma(i->second + 1);
+			// px -= std::lgamma(i->second + 1);
 		}
 	}
-	px += std::lgamma(x.size()+1);
-
-	// std::cout << "P(X | G, T) = " << px << std::endl;
-
+	// px += std::lgamma(x.size()+1);
 	return px;
 }
 
