@@ -43,6 +43,7 @@ int Pileup::next(){
 			qual.push_back(bam_get_qual(alignment)[qpos]);
 			names.push_back(name);
 			readgroups.push_back(bam_aux2Z(bam_aux_get(alignment, "RG")));
+			ref_char = ref.get_ref(get_chr_name(tid))[pos];
 		}
 		return 1;
 	} else {
@@ -58,7 +59,7 @@ int Pileup::get_pos(){
 	return pos;
 }
 
-std::string Pileup::chr_name(){
+std::string Pileup::get_chr_name(int tid){
 	return reader.get_ref_name(tid);
 }
 

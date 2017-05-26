@@ -51,7 +51,7 @@ theta_t Seqem::m_function(theta_t theta){
 
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
-			std::vector<char> x = std::get<0>(*pos);
+			const std::vector<char> &x = std::get<0>(*pos);
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
 				std::vector<double> site_s = calc_s(x,*g,theta);
 				double pg_x = pg_x_given_theta(*g,x,theta);

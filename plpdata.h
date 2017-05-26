@@ -6,15 +6,15 @@
 #include <map>
 #include "pileup.h"
 
-typedef std::tuple<std::vector<char>,std::map<char,int>,std::vector<char>,std::vector<std::string> > pileuptuple_t; //(bases, counts, qualities, readgroups)
-typedef std::vector<std::vector<pileuptuple_t> > pileupdata_t; //data[tid][pos] = (bases, counts, qualities, readgroups)
+typedef std::tuple<std::vector<char>,std::map<char,int>,std::vector<char>,char,std::vector<std::string> > pileuptuple_t; //(bases, counts, qualities, readgroups)
+typedef std::vector<std::vector<pileuptuple_t> > pileupdata_t; //data[tid][pos] = (bases, counts, qualities, ref, readgroups)
 
 
 //class for slurping in pileup data
 class Pileupdata{
 protected:
 	Pileup plp;
-	pileupdata_t data; //data[tid][pos] = (bases, counts, qualities, readgroups)
+	pileupdata_t data; //data[tid][pos] = (bases, counts, qualities, ref, readgroups)
 	void populate_data();
 public:
 	std::vector<char> bases_at(int tid, int pos);
@@ -25,7 +25,7 @@ public:
 	Pileupdata(std::string filename, std::string refname, std::string region);
 	Pileupdata(std::string filename, std::string refname);
 	Pileupdata(Pileup p);
-	Pileupdata(std::vector<char> x, std::vector<char> quals);
+	Pileupdata(std::vector<char> x, char ref, std::vector<char> quals);
 	Pileupdata(std::vector<char> x);
 };
 
