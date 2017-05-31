@@ -7,7 +7,7 @@
 #include "genotype.h"
 #include <vector>
 
-typedef std::tuple<double> theta_t; //mu parameter
+typedef std::tuple<double, double> theta_t; //mu parameter
 
 class Seqem{
 protected:

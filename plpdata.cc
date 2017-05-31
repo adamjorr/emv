@@ -15,14 +15,7 @@ Pileupdata::Pileupdata(Pileup p) : plp(p), data() {
 }
 
 Pileupdata::Pileupdata(std::vector<char> x, char ref, std::vector<char> quals) : plp(), data(){
-	std::map<char,int> counts = {{'A',0},{'T',0},{'G',0},{'C',0}};
-	std::vector<std::string> rgs(x.size(),"RG0");
-	for (char i : x){
-		++counts[i];
-	}
-	data.resize(1);
-	std::vector<pileuptuple_t> v(1,std::make_tuple(x,counts,quals,ref,rgs));
-	data.push_back(v);
+	populate_data(x,ref,quals);
 }
 
 Pileupdata::Pileupdata(std::vector<char> x) : Pileupdata(x, x[0], x) {
@@ -32,11 +25,26 @@ Pileupdata::Pileupdata(std::vector<char> x) : Pileupdata(x, x[0], x) {
 void Pileupdata::populate_data(){
 	std::map<std::string,int> chrs = plp.get_name_map();
 	while(plp.next() != 0){
-		int tid = plp.get_tid();		
+		int tid = plp.get_tid();
+		char ref_char = plp.ref_char;		
 		data.resize(tid + 1);
-		data[tid].push_back(std::make_tuple(plp.alleles,plp.counts,plp.qual,plp.ref_char,plp.readgroups));
+		data[tid].push_back(std::make_tuple(plp.alleles,plp.counts,plp.qual,ref_char,plp.readgroups));
+		++ref_counts[ref_char];
 	}
 }
+
+void Pileupdata::populate_data(std::vector<char> x, char ref, std::vector<char> quals){
+	std::map<char,int> counts = {{'A',0},{'T',0},{'G',0},{'C',0}};
+	std::vector<std::string> rgs(x.size(),"RG0");
+	for (char i : x){
+		++counts[i];
+	}
+	data.resize(1);
+	std::vector<pileuptuple_t> v(1,std::make_tuple(x,counts,quals,ref,rgs));
+	data.push_back(v);
+	++ref_counts[ref];
+}
+
 
 std::vector<char> Pileupdata::bases_at(int tid, int pos){
 	return std::get<0>(data[tid][pos]);

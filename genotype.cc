@@ -41,6 +41,10 @@ void Genotype::enumerate_gts(std::vector<Genotype> &v, int stopallele, unsigned 
 	}
 }
 
+double Genotype::p_finite_alleles(char ref, double ref_weight, double theta, double pi){
+	double p = 0.0;
+}
+
 std::vector<Genotype> Genotype::enumerate_gts(int ploidy){
 	std::vector<Genotype> v;
 	enumerate_gts(v,alleles.size(),ploidy,std::string());
