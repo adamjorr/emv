@@ -42,15 +42,19 @@ void Genotype::enumerate_gts(std::vector<Genotype> &v, int stopallele, unsigned 
 }
 
 double Genotype::p_finite_alleles(char ref, double ref_weight, double theta, std::map<char,double> pi){
-	double p = 1.0;
+	double p = std::tgamma(ploidy + 1);
+	int numalleles = 0;
 	for (auto it = gt.begin(); it != gt.end(); ++it){
 		char allele = it->first;
 		int count = it->second;
 		double w = (ref == allele ? ref_weight : 0);
 		for (int i = 0; i < count; ++i){
-			p *= (w + theta * pi[allele] + i);
+			p *= (w + theta * pi[allele] + i) / (w + theta + numalleles);
+			numalleles++;
 		}
+		p /= std::tgamma(count + 1)
 	}
+	return p;
 }
 
 std::vector<Genotype> Genotype::enumerate_gts(int ploidy){
