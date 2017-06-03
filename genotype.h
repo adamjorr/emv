@@ -15,7 +15,7 @@ protected:
 public:
 	Genotype(std::string gtstr);
 	Genotype(std::map<char,int> gt);
-	double p_finite_alleles(char ref, double ref_weight, double theta, double pi);
+	double p_finite_alleles(char ref, double ref_weight, double theta, std::map<char,double> pi);
 	int numbase(char n);
 	int numnotbase(char n);
 	int getploidy();
