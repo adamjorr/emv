@@ -43,18 +43,24 @@ namespace meep_math{
 						- 4 * b^2 * c^3 * e + b^2 * c^2 * d^2;
 		double disc0 = c^2 - 3.0 * b * d + 12.0 * a * e;
 		double disc1 = 2.0 * c^3 - 9 * b * c * d + 27 * b^2 * e + 27 * a * d^2 - 72 * a * c * e;
-		std::complex<double> Q = std::pow((disc1 + std::sqrt(-27 * disc))/2,1/3);
+		std::complex<double> Q;
+		if(disc != 0 && disc0 == 0){
+			Q = std::pow(disc1,1/3); //special case
+		}
+		else{
+			Q = std::pow((disc1 + std::sqrt(-27 * disc))/2,1/3);	
+		}
 		double S = 0.5 * std::sqrt(-(2.0/3.0)*p + 1.0/(3.0*a) * (Q + disc0/Q));
 
-		//check special cases
-		if(disc != 0 && disc0 == 0){
-			Q = std::pow(disc1,1/3);
-		}
+		//special case. when S == 0 we try other cube roots.
+		//see https://en.wikipedia.org/wiki/Cube_root
+		//if none of them work, it's because the depressed quartic is biquadratic
 		if(S == 0){
-			Q = Q * std::complex<double>(-0.5,std::sqrt(3)/2);
+			std::complex<double> old_Q = Q;
+			Q = old_Q * std::complex<double>(-0.5,std::sqrt(3)/2);
 			S = 0.5 * std::sqrt(-(2.0/3.0)*p + 1.0/(3.0*a) * (Q + disc0/Q));
 			if (S == 0){
-				Q = Q * std::complex<double>(-0.5,-std::sqrt(3)/2);
+				Q = old_Q * std::complex<double>(-0.5,-std::sqrt(3)/2);
 				S = 0.5 * std::sqrt(-(2.0/3.0)*p + 1.0/(3.0*a) * (Q + disc0/Q));
 				if (S == 0){
 					std::array<double,2> z = meep_math::solve_quadratic(a,c,e);
@@ -62,10 +68,10 @@ namespace meep_math{
 					x[1] = -std::sqrt(z[0]);
 					x[2] = std::sqrt(z[1]);
 					x[3] = -std::sqrt(z[2]);
+					return x;
 				}
 			}
 		}
-
 		//compute roots
 		x[0] = -b / (4.0 * a) - S - 0.5 * std::sqrt(-4.0 * S^2 - 2*p + q/S);
 		x[1] = -b / (4.0 * a) - S + 0.5 * std::sqrt(-4.0 * S^2 - 2*p + q/S);
