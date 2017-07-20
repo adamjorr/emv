@@ -79,4 +79,17 @@ namespace meep_math{
 		x[3] = -b / (4.0 * a) + S + 0.5 * std::sqrt(-4.0 * S^2 - 2*p + q/S);
 		return x;
 	}
+
+	//newton-raphson root finding
+	double nr_root(std::function<double(double)> f, std::function<double(double)> f_prime, double init, double tolerance=.001, int maxiter=1000){
+		double x = init;
+		int iter = 0;
+		while (double f_x = f(x); f_x > tolerance || iter++ == maxiter){
+			x = x - ( f_x / f_prime(x) );
+		}
+		return x;
+	}
+
+
+
 }
