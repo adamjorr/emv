@@ -16,11 +16,14 @@ public:
 	Genotype(std::string gtstr);
 	Genotype(std::map<char,int> gt);
 	double p_finite_alleles(char ref, double ref_weight, double theta, std::map<char,double> pi);
+	static double allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi);
+	static double ref_alpha(double ref_weight, double theta);
 	int numbase(char n);
 	int numnotbase(char n);
 	int getploidy();
 	std::string to_string() const;
 	static std::vector<Genotype> enumerate_gts(int ploidy);
+	operator int() const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Genotype);

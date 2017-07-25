@@ -87,6 +87,9 @@ namespace meep_math{
 		while (double f_x = f(x); f_x > tolerance || iter++ == maxiter){
 			x = x - ( f_x / f_prime(x) );
 		}
+		if (iter == maxiter){
+			throw std::runtime_error("Newton-rafsom failed to converge" << std::endl);
+		}
 		return x;
 	}
 

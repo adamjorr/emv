@@ -40,13 +40,10 @@ double Finiteem::q_function(theta_t theta){
 
 theta_t Finiteem::m_function(theta_t theta){
 	pileupdata_t plpdata = plp.get_data();
-	std::map<Genotype,int> gt_counts(possible_gts.begin(),possible_gts.end());
-	std::map<char,std::map<Genotype,double>> t();
+	GT_Matrix<ploidy> n();
+	GT_Matrix<ploidy> p()
 	std::vector<double> s(3,0.0);
-	for (auto a: Genotype.alleles){
-		t[*a] = gt_counts;
-	}
-
+	
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
 			const std::vector<char> &x = std::get<0>(*pos);
@@ -84,7 +81,24 @@ theta_t Finiteem::m_function(theta_t theta){
 	return std::make_tuple(epsilon);
 }
 
-std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
+void Finiteem::optimize_q(GT_Matrix<2> m){
+	for(auto a : m){ //4 reference bases
+		for auto (b : *a){ // 10 genotypes
+			n = std::get<0>(b);
+			p = std::get<1>(b);
+		}
+	}
+}
+
+double Finiteem::dq_dtheta(double theta, GT_Matrix<2> m, ){
+	return 
+}
+
+double Finiteem::ddq_dtheta(double theta){
+	
+}
+
+std::vector<double> Finiteem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
 	std::vector<double> s(3,0.0);
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
 		int numgt = g.numbase(*i);
@@ -102,13 +116,13 @@ std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta
 }
 
 //RESULT NOT IN LOG SPACE
-double Seqem::pg_x_given_theta(const Genotype g,const std::vector<char> x,const theta_t theta){
+double Finiteem::pg_x_given_theta(const Genotype g,const std::vector<char> x,const theta_t theta){
 	double px = px_given_gtheta(x,g,theta);
 	return exp(px + pg(g));
 }
 
 //may be faster if we represent x as a map w/ char and counts, like gt?? we support this in plpdata
-double Seqem::px_given_gtheta(const std::vector<char> x,const Genotype g,const theta_t theta){
+double Finiteem::px_given_gtheta(const std::vector<char> x,const Genotype g,const theta_t theta){
 	double px = 0.0;
 	std::map<char, int> counts;
 
@@ -130,7 +144,7 @@ double Seqem::px_given_gtheta(const std::vector<char> x,const Genotype g,const t
 }
 
 //LOG SPACE
-double Seqem::pn_given_gtheta(char n, Genotype g, theta_t theta){
+double Finiteem::pn_given_gtheta(char n, Genotype g, theta_t theta){
 	double epsilon = std::get<0>(theta);
 	double p;
 	// p = ((double)g.numbase(n))/g.getploidy()*(1.0-3.0*epsilon) + ((double)g.numnotbase(n))/g.getploidy()*epsilon;
@@ -156,11 +170,11 @@ double Seqem::pn_given_gtheta(char n, Genotype g, theta_t theta){
 	}
 }
 
-double Seqem::pg(Genotype g){
+double Finiteem::pg(Genotype g){
 	return log(1.0/possible_gts.size());
 }
 
-double Seqem::smallest_nonzero(std::vector<double> v){
+double Finiteem::smallest_nonzero(std::vector<double> v){
 	std::vector<double> sorted_v(v);
 	std::sort(sorted_v.begin(),sorted_v.end());
 	double smallest = 0;

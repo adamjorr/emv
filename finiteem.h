@@ -6,7 +6,7 @@
 #include "genotype.h"
 #include <vector>
 
-typedef std::tuple<double, std::map<char, int> > theta_t; //theta, pi
+typedef std::tuple<double, std::map<char, int> > theta_t; //epsilon, theta, pi
 
 class Seqem{
 protected:
@@ -25,7 +25,7 @@ public:
 	theta_t m_function(theta_t theta);
 };
 
-
-
+template<int ploidy>
+using GT_Matrix = std::array<std::array<int,Genotype.enumerate_gts(ploidy).size()>,Genotype.alleles.size()>;
 
 #endif
