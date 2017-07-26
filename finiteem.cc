@@ -8,7 +8,7 @@
 #include <cstring>
 #include <limits>
 
-Finiteem::Finiteem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1,std::map::map())),
+Finiteem::Finiteem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1,std::map::map(),1)),
 	em(std::bind(&Finiteem::q_function, this, std::placeholders::_1), std::bind(&Finiteem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy){
 	possible_gts = Genotype::enumerate_gts(ploidy);
@@ -17,7 +17,7 @@ Finiteem::Finiteem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1
 Finiteem::Finiteem(Pileupdata p): Finiteem(p, 2){
 }
 
-Finiteem::Finiteem(std::string samfile, std::string refname, int ploidy) : plp(samfile, refname), theta(std::make_tuple(0.1,std::map::map())),
+Finiteem::Finiteem(std::string samfile, std::string refname, int ploidy) : plp(samfile, refname), theta(std::make_tuple(0.1,std::map::map(),1)),
 	em(std::bind(&Finiteem::q_function, this, std::placeholders::_1), std::bind(&Finiteem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy){
 	possible_gts = Genotype::enumerate_gts(ploidy);
@@ -41,8 +41,6 @@ double Finiteem::q_function(theta_t theta){
 theta_t Finiteem::m_function(theta_t theta){
 	pileupdata_t plpdata = plp.get_data();
 	GT_Matrix<ploidy> n();
-	GT_Matrix<ploidy> p()
-	std::vector<double> s(3,0.0);
 	
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
@@ -81,21 +79,144 @@ theta_t Finiteem::m_function(theta_t theta){
 	return std::make_tuple(epsilon);
 }
 
+//TODO:Make this work for pi
 void Finiteem::optimize_q(GT_Matrix<2> m){
-	for(auto a : m){ //4 reference bases
-		for auto (b : *a){ // 10 genotypes
-			n = std::get<0>(b);
-			p = std::get<1>(b);
+	std::get<0>(theta) = meep_math::nr_root(dq_dtheta,ddq_dtheta,std::get<0>(theta));
+	std::get<2>(theta) = meep_math::nr_root(dq_dw,ddq_dw,std::get<2>(theta));
+}
+
+double Finiteem::dq_dtheta(double th){
+	std::map<char,double> pi = std::get<1>(theta);
+	double refweight = std::get<2>(theta);
+	double dq = 0.0;
+	int numalleles = Genotype::alleles.size();
+	int numgts = possible_gts.size();
+	for (int i = 0; i < numalleles; ++i){ //for each reference base
+		for (int j = 0; i < numgts; ++j){ //for each genotype
+			Genotype g = possible_gts[j];
+			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
+				char allele = it -> first;
+				for (int k = 0; k < it->second; ++k){ //add pi/(alpha + 0) twice for het; pi/(alpha + 1) for homozygote
+					dq += m[i][j] * (pi[allele]/(allele_alpha(allele,Genotype::alleles[i],refweight,th,pi) + k))
+				}
+			}
+			for (l = 0; l < ploidy; ++l){ //subtract alpha, alpha + 1
+				dq -= m[i][j] * (1.0 / ref_alpha(refweight, th) + l);	
+			}
 		}
 	}
+	return dq;
 }
 
-double Finiteem::dq_dtheta(double theta, GT_Matrix<2> m, ){
-	return 
+double Finiteem::ddq_dtheta(double th){
+	double ddq = 0.0;
+	std::map<char,double> pi = std::get<1>(theta);
+	double refweight = std::get<2>(theta);
+	int numalleles = Genotype::alleles.size();
+	int numgts = possible_gts.size();
+	for (int i = 0; i < numalleles; ++i){ //for each reference base
+		for (int j = 0; i < numgts; ++j){ //for each genotype
+			Genotype g = possible_gts[j];
+			for (l = 0; l < ploidy; ++l){ //add  1/alpha, 1/(alpha + 1)
+				dq += m[i][j] * (1.0 / (ref_alpha(refweight, theta) + l)^2);	
+			}
+			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
+				char allele = it -> first;
+				for (int k = 0; k < it->second; ++k){ //add pi/(alpha + 0) twice for het; pi/(alpha + 1) for homozygote
+					ddq -= m[i][j] * ((pi[allele]^2)/(allele_alpha(allele,Genotype::alleles[i],refweight,theta,pi) + k)^2)
+				}
+			}
+		}
+	}
+	return ddq;
 }
 
-double Finiteem::ddq_dtheta(double theta){
-	
+double Finiteem::dq_dw(double w){
+	double dq = 0.0;
+	double th = std::get<0>(theta);
+	std::map<char,double> pi = std::get<1>(theta);
+	int numalleles = Genotype::alleles.size();
+	int numgts = possible_gts.size();
+	for (int i = 0; i < numalleles; ++i){ //for each reference base
+		for (int j = 0; i < numgts; ++j){ //for each genotype
+			Genotype g = possible_gts[j];
+			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
+				char allele = it -> first;
+				if (allele == Genotype::alleles[i]){
+					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+						dq += m[i][j] * (1.0/(allele_alpha(allele,Genotype::alleles[i],w,theta,pi) + k))
+					}
+				}
+			}
+		}
+	}
+	return dq;	
+}
+
+double Finiteem::ddq_dw(double w){
+	double ddq = 0.0;
+	double th = std::get<0>(theta);
+	std::map<char,double> pi = std::get<1>(theta);
+	int numalleles = Genotype::alleles.size();
+	int numgts = possible_gts.size();
+	for (int i = 0; i < numalleles; ++i){ //for each reference base
+		for (int j = 0; i < numgts; ++j){ //for each genotype
+			Genotype g = possible_gts[j];
+			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
+				char allele = it -> first;
+				if (allele == Genotype::alleles[i]){
+					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+						ddq -= m[i][j] * (1.0/(allele_alpha(allele,Genotype::alleles[i],w,theta,pi) + k)^2)
+					}
+				}
+			}
+		}
+	}
+	return ddq;	
+}
+
+double dq_dpi(char a, double pi){
+	double dq = 0.0;
+	double th = std::get<0>(theta);
+	double refweight = std::get<2>(theta);
+	int numalleles = Genotype::alleles.size();
+	int numgts = possible_gts.size();
+	for (int i = 0; i < numalleles - 1; ++i){ //for each reference base except one
+		for (int j = 0; i < numgts; ++j){ //for each genotype
+			Genotype g = possible_gts[j];
+			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
+				char allele = it -> first;
+				if (allele == a){
+					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+						dq += m[i][j] * ((theta)/(allele_alpha(allele,Genotype::alleles[i],refweight,theta,pi) + k))
+					}
+				}
+			}
+		}
+	}
+	return dq;	
+}
+
+double ddq_dpi(char a, double pi){
+	double ddq = 0.0;
+	double th = std::get<0>(theta);
+	double refweight = std::get<2>(theta);
+	int numalleles = Genotype::alleles.size();
+	int numgts = possible_gts.size();
+	for (int i = 0; i < numalleles - 1; ++i){ //for each reference base except one
+		for (int j = 0; i < numgts; ++j){ //for each genotype
+			Genotype g = possible_gts[j];
+			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
+				char allele = it -> first;
+				if (allele == a){
+					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+						ddq -= m[i][j] * ((theta)^2/(allele_alpha(allele,Genotype::alleles[i],refweight,theta,pi) + k)^2)
+					}
+				}
+			}
+		}
+	}
+	return ddq;	
 }
 
 std::vector<double> Finiteem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
@@ -185,4 +306,18 @@ double Finiteem::smallest_nonzero(std::vector<double> v){
 	}
 	return 0;
 }
+
+double Finiteem::allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi){
+	double w = (ref == allele ? ref_weight : 0);
+	return theta * pi[allele] + w;
+}
+
+double Finiteem::allele_alpha(char allele, char ref, double ref_weight, double theta, double pi){
+	double w = (ref == allele ? ref_weight : 0);
+	return theta * pi + w;
+}
+double Finiteem::ref_alpha(double ref_weight, double theta){
+	return ref_weight + theta;
+}
+
 

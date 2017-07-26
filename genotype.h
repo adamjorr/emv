@@ -8,22 +8,19 @@
 
 class Genotype{
 protected:
-	std::map<char,int> gt;
 	int ploidy;
 	static void enumerate_gts(std::vector<Genotype> &v, int stopallele, unsigned int ploidy, std::string genotype);
 	static const std::vector<char> alleles;
 public:
+	std::map<char,int> gt;
 	Genotype(std::string gtstr);
 	Genotype(std::map<char,int> gt);
 	double p_finite_alleles(char ref, double ref_weight, double theta, std::map<char,double> pi);
-	static double allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi);
-	static double ref_alpha(double ref_weight, double theta);
 	int numbase(char n);
 	int numnotbase(char n);
 	int getploidy();
 	std::string to_string() const;
 	static std::vector<Genotype> enumerate_gts(int ploidy);
-	operator int() const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Genotype);

@@ -6,7 +6,7 @@
 #include "genotype.h"
 #include <vector>
 
-typedef std::tuple<double, std::map<char, int> > theta_t; //epsilon, theta, pi
+typedef std::tuple<double, std::map<char, int>, double> theta_t; //theta, pi, refweight
 
 class Seqem{
 protected:
@@ -15,6 +15,7 @@ protected:
 	EM<double> em;
 	int ploidy;
 	std::vector<Genotype> possible_gts;
+	GT_Matrix<ploidy> m;
 public:
 	Finiteem(Pileupdata p, int ploidy);
 	Finiteem(Pileupdata p);
@@ -23,6 +24,8 @@ public:
 	theta_t start(double stop);
 	double q_function(theta_t theta);
 	theta_t m_function(theta_t theta);
+	static double allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi);
+	static double ref_alpha(double ref_weight, double theta);
 };
 
 template<int ploidy>

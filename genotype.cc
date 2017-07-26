@@ -56,14 +56,7 @@ double Genotype::p_finite_alleles(char ref, double ref_weight, double theta, std
 	return p;
 }
 
-double Genotype::allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi){
-	double w = (ref == allele ? ref_weight : 0);
-	return theta * pi[allele] + w;
-}
 
-double ref_alpha(double ref_weight, double theta){
-	return ref_weight + theta;
-}
 
 std::vector<Genotype> Genotype::enumerate_gts(int ploidy){
 	std::vector<Genotype> v;
@@ -83,8 +76,5 @@ std::ostream& operator<<(std::ostream& os, const Genotype gt){
 	return os << gt.to_string();
 }
 
-operator int() const {
-	return 
-}
 
 
