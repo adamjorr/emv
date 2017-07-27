@@ -1,4 +1,4 @@
-#include "finiteem.h"
+#include "popstatem.h"
 #include <cmath>
 #include <functional>
 #include <algorithm>
@@ -8,31 +8,31 @@
 #include <cstring>
 #include <limits>
 
-Finiteem::Finiteem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1,std::map::map(),1)),
-	em(std::bind(&Finiteem::q_function, this, std::placeholders::_1), std::bind(&Finiteem::m_function,this,std::placeholders::_1), theta),
+Popstatem::Popstatem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1,std::map::map(),1)),
+	em(std::bind(&Popstatem::q_function, this, std::placeholders::_1), std::bind(&Popstatem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy){
 	possible_gts = Genotype::enumerate_gts(ploidy);
 	m = load_matrix();
 }
 
-Finiteem::Finiteem(Pileupdata p): Finiteem(p, 2){
+Popstatem::Popstatem(Pileupdata p): Popstatem(p, 2){
 }
 
-Finiteem::Finiteem(std::string samfile, std::string refname, int ploidy) : plp(samfile, refname), theta(std::make_tuple(0.1,std::map::map(),1)),
-	em(std::bind(&Finiteem::q_function, this, std::placeholders::_1), std::bind(&Finiteem::m_function,this,std::placeholders::_1), theta),
+Popstatem::Popstatem(std::string samfile, std::string refname, int ploidy) : plp(samfile, refname), theta(std::make_tuple(0.1,std::map::map(),1)),
+	em(std::bind(&Popstatem::q_function, this, std::placeholders::_1), std::bind(&Popstatem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy){
 	possible_gts = Genotype::enumerate_gts(ploidy);
 	m = load_matrix();
 }
 
-Finiteem::Finiteem(std::string samfile, std::string refname) : Finiteem(samfile, refname, 2) {
+Popstatem::Popstatem(std::string samfile, std::string refname) : Popstatem(samfile, refname, 2) {
 }
 
-theta_t Finiteem::start(double stop){
+theta_t Popstatem::start(double stop){
 	return em.start(stop);
 }
 
-double Finiteem::q_function(theta_t theta){
+double Popstatem::q_function(theta_t theta){
 	double likelihood = 0.0;
 	for (int i = 0; i < Genotype::alleles.size(); ++i){
 		for (int j = 0; j < possible_gts.size(); ++j){
@@ -51,7 +51,7 @@ double Finiteem::q_function(theta_t theta){
 	return likelihood;
 }
 
-theta_t Finiteem::m_function(theta_t theta){
+theta_t Popstatem::m_function(theta_t theta){
 	double th = meep_math::nr_root(dq_dtheta,ddq_dtheta,std::get<0>(theta));
 	double w = meep_math::nr_root(dq_dw,ddq_dw,std::get<2>(theta));
 
@@ -71,7 +71,7 @@ theta_t Finiteem::m_function(theta_t theta){
 
 
 //todo: figure out what to do with this function
-GT_Matrix<ploidy> Finiteem::load_matrix(){
+GT_Matrix<ploidy> Popstatem::load_matrix(){
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
 			const std::vector<char> &x = std::get<0>(*pos);
@@ -88,11 +88,11 @@ GT_Matrix<ploidy> Finiteem::load_matrix(){
 	}
 }
 
-theta_t Finiteem::optimize_q(theta_t theta){
+theta_t Popstatem::optimize_q(theta_t theta){
 
 }
 
-double Finiteem::dq_dtheta(double th){
+double Popstatem::dq_dtheta(double th){
 	std::map<char,double> pi = std::get<1>(theta);
 	double refweight = std::get<2>(theta);
 	double dq = 0.0;
@@ -115,7 +115,7 @@ double Finiteem::dq_dtheta(double th){
 	return dq;
 }
 
-double Finiteem::ddq_dtheta(double th){
+double Popstatem::ddq_dtheta(double th){
 	double ddq = 0.0;
 	std::map<char,double> pi = std::get<1>(theta);
 	double refweight = std::get<2>(theta);
@@ -138,7 +138,7 @@ double Finiteem::ddq_dtheta(double th){
 	return ddq;
 }
 
-double Finiteem::dq_dw(double w){
+double Popstatem::dq_dw(double w){
 	double dq = 0.0;
 	double th = std::get<0>(theta);
 	std::map<char,double> pi = std::get<1>(theta);
@@ -160,7 +160,7 @@ double Finiteem::dq_dw(double w){
 	return dq;	
 }
 
-double Finiteem::ddq_dw(double w){
+double Popstatem::ddq_dw(double w){
 	double ddq = 0.0;
 	double th = std::get<0>(theta);
 	std::map<char,double> pi = std::get<1>(theta);
@@ -182,7 +182,7 @@ double Finiteem::ddq_dw(double w){
 	return ddq;	
 }
 
-double dq_dpi(char a, double pi){
+double Popstatem::dq_dpi(char a, double pi){
 	double dq = 0.0;
 	double th = std::get<0>(theta);
 	double refweight = std::get<2>(theta);
@@ -204,7 +204,7 @@ double dq_dpi(char a, double pi){
 	return dq;	
 }
 
-double ddq_dpi(char a, double pi){
+double Popstatem::ddq_dpi(char a, double pi){
 	double ddq = 0.0;
 	double th = std::get<0>(theta);
 	double refweight = std::get<2>(theta);
@@ -226,16 +226,16 @@ double ddq_dpi(char a, double pi){
 	return ddq;	
 }
 
-double Finiteem::allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi){
+double Popstatem::allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi){
 	double w = (ref == allele ? ref_weight : 0);
 	return theta * pi[allele] + w;
 }
 
-double Finiteem::allele_alpha(char allele, char ref, double ref_weight, double theta, double pi){
+double Popstatem::allele_alpha(char allele, char ref, double ref_weight, double theta, double pi){
 	double w = (ref == allele ? ref_weight : 0);
 	return theta * pi + w;
 }
-double Finiteem::ref_alpha(double ref_weight, double theta){
+double Popstatem::ref_alpha(double ref_weight, double theta){
 	return ref_weight + theta;
 }
 
