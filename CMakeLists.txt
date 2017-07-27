@@ -11,6 +11,8 @@ add_library(libmeep STATIC
   samio.cc
   seqem.cc
   tuple_print.cc
+  popstatem.cc
+  meep_math.cc
 )
 
 target_link_libraries(libmeep hts)
