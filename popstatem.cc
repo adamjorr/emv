@@ -88,10 +88,6 @@ GT_Matrix<ploidy> Popstatem::load_matrix(){
 	}
 }
 
-theta_t Popstatem::optimize_q(theta_t theta){
-
-}
-
 double Popstatem::dq_dtheta(double th){
 	std::map<char,double> pi = std::get<1>(theta);
 	double refweight = std::get<2>(theta);
