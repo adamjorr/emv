@@ -10,7 +10,6 @@ class Genotype{
 protected:
 	int ploidy;
 	static void enumerate_gts(std::vector<Genotype> &v, int stopallele, unsigned int ploidy, std::string genotype);
-	static const std::vector<char> alleles;
 public:
 	std::map<char,int> gt;
 	Genotype(std::string gtstr);
@@ -21,6 +20,7 @@ public:
 	int getploidy();
 	std::string to_string() const;
 	static std::vector<Genotype> enumerate_gts(int ploidy);
+	static const std::vector<char> alleles;
 };
 
 std::ostream& operator<<(std::ostream& os, const Genotype);

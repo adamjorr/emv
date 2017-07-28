@@ -1,15 +1,16 @@
 #include "genotype.h"
+#include "popstatem.h"
 
 const std::vector<char> Genotype::alleles = {'A','T','G','C'};
 
-Genotype::Genotype(std::string gtstr) : gt(), ploidy(0) {
+Genotype::Genotype(std::string gtstr) : ploidy(0), gt() {
 	for(auto it = gtstr.begin(); it != gtstr.end(); ++it){
 		++gt[*it];
 		ploidy+=1;
 	}
 }
 
-Genotype::Genotype(std::map<char,int> gt) : gt(gt), ploidy(0) {
+Genotype::Genotype(std::map<char,int> gt) : ploidy(0), gt(gt) {
 	for(auto it = gt.begin(); it!= gt.end(); ++it){
 		ploidy += it->second;
 	}
@@ -49,7 +50,7 @@ double Genotype::p_finite_alleles(char ref, double ref_weight, double theta, std
 		int count = it->second;
 		for (int i = 0; i < count; ++i){
 			// p *= (w + theta * pi[allele] + i) / (w + theta + numalleles);
-			p *= (allele_alpha(allele,ref,ref_weight,theta,pi) + i) / (ref_alpha(ref_weight,theta) + numalleles);
+			p *= (Popstatem::allele_alpha(allele,ref,ref_weight,theta,pi) + i) / (Popstatem::ref_alpha(ref_weight,theta) + numalleles);
 			numalleles++;
 		}
 	}

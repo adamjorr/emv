@@ -8,7 +8,7 @@
 #include <cstring>
 #include <limits>
 
-Seqem::Seqem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1)),
+Seqem::Seqem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.01)),
 	em(std::bind(&Seqem::q_function, this, std::placeholders::_1), std::bind(&Seqem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy){
 	possible_gts = Genotype::enumerate_gts(ploidy);
