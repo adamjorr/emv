@@ -21,6 +21,7 @@ public:
 	std::string to_string() const;
 	static std::vector<Genotype> enumerate_gts(int ploidy);
 	static const std::vector<char> alleles;
+	static constexpr size_t numalleles = 4;
 };
 
 std::ostream& operator<<(std::ostream& os, const Genotype);

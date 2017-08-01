@@ -8,6 +8,8 @@
 #include <cstring>
 #include <limits>
 
+const std::map<char,double> Seqem::uniform_pi = {{'A',.25},{'T',.25},{'C',.25},{'G',.25}};
+
 Seqem::Seqem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.01)),
 	em(std::bind(&Seqem::q_function, this, std::placeholders::_1), std::bind(&Seqem::m_function,this,std::placeholders::_1), theta),
 	ploidy(ploidy){
@@ -38,7 +40,7 @@ double Seqem::q_function(theta_t theta){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
 			const std::vector<char> &x = std::get<0>(*pos);
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-				likelihood += pg_x_given_theta(*g,x,theta);
+				likelihood += pg_x_given_theta(*g,x,theta,uniform_pi);
 			}
 		}
 	}
@@ -51,37 +53,21 @@ theta_t Seqem::m_function(theta_t theta){
 
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
-			const std::vector<char> &x = std::get<0>(*pos);
-			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-				std::vector<double> site_s = calc_s(x,*g,theta);
-				double pg_x = pg_x_given_theta(*g,x,theta);
-				for(size_t i = 0; i < s.size(); ++i){
-					s[i] += pg_x * site_s[i];	
-				}
-			}
+			increment_s(s, *pos, possible_gts, theta, uniform_pi);
 		}
 	}
+	return std::make_tuple(calc_epsilon(s));
+}
 
-	// scale to prevent underflow
-	// double smallest = smallest_nonzero(s);
-	// if (smallest != 0){ //there SHOULD always be an s > 0.
-	// 	std::transform(s.begin(),s.end(),s.begin(),[smallest](double d){ return d / smallest; });
-	// }
-
-	//quadratic formula
-	double a = 3.0 * (s[0] + s[1] + s[2]);
-	double b = - (3.0/2 * s[0] + s[1] + 5.0/2 * s[2]);
-	double c = s[2] / 2;
-	double epsilon_minus = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
-	// double epsilon_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
-	double epsilon;
-	if (epsilon_minus < 0){
-		epsilon = 0;
+void increment_s(std::vector<double> &s, pileuptuple_t pos, std::vector<Genotype> possible_gts, theta_t theta, std::map<char,double> pi){
+	const std::vector<char> &x = std::get<0>(pos);
+	for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
+		std::vector<double> site_s = calc_s(x,*g,theta);
+		double pg_x = pg_x_given_theta(*g,x,theta,pi);
+		for(size_t i = 0; i < s.size(); ++i){
+			s[i] += pg_x * site_s[i];	
+		}
 	}
-	else{
-		epsilon = epsilon_minus;
-	}
-	return std::make_tuple(epsilon);
 }
 
 std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
@@ -102,9 +88,9 @@ std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta
 }
 
 //RESULT NOT IN LOG SPACE
-double Seqem::pg_x_given_theta(const Genotype g,const std::vector<char> x,const theta_t theta){
+double Seqem::pg_x_given_theta(const Genotype g,const std::vector<char> x,const theta_t theta, std::map<char,double> pi){
 	double px = px_given_gtheta(x,g,theta);
-	return exp(px + pg(g));
+	return exp(px + pg(g,pi));
 }
 
 //may be faster if we represent x as a map w/ char and counts, like gt?? we support this in plpdata
@@ -156,8 +142,28 @@ double Seqem::pn_given_gtheta(char n, Genotype g, theta_t theta){
 	}
 }
 
-double Seqem::pg(Genotype g){
-	return log(1.0/possible_gts.size());
+double Seqem::pg(Genotype g, std::map<char,double> pi){
+	double p = 0.0;
+	for (auto it=g.gt.begin(); it != g.gt.end(); ++it){
+		p += it->second * log(pi[it->first]);
+	}
+	return p;
+}
+
+double calc_epsilon(std::vector<double> s){
+	double a = 3.0 * (s[0] + s[1] + s[2]);
+	double b = - (3.0/2 * s[0] + s[1] + 5.0/2 * s[2]);
+	double c = s[2] / 2;
+	double epsilon_minus = (-b - sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+	// double epsilon_plus = (-b + sqrt(std::pow(b,2) - 4 * a * c))/(2 * a);
+	double epsilon;
+	if (epsilon_minus < 0){
+		epsilon = 0;
+	}
+	else{
+		epsilon = epsilon_minus;
+	}
+	return epsilon;
 }
 
 double Seqem::smallest_nonzero(std::vector<double> v){

@@ -3,6 +3,7 @@
 
 const std::vector<char> Genotype::alleles = {'A','T','G','C'};
 
+
 Genotype::Genotype(std::string gtstr) : ploidy(0), gt() {
 	for(auto it = gtstr.begin(); it != gtstr.end(); ++it){
 		++gt[*it];

@@ -1,4 +1,5 @@
 #include "popstatem.h"
+#include "seqem.h"
 #include "meep_math.h"
 #include <cmath>
 #include <functional>
@@ -67,7 +68,20 @@ theta_t Popstatem::m_function(theta_t theta){
 		p += optimum;
 	}
 	pi[Genotype::alleles.back()] = 1 - p;
-	return std::make_tuple(th,pi,w);
+
+	//optimize epsilon and update gt matrix m
+	pileupdata_t plpdata = plp.get_data();
+	std::vector<double> s(3,0.0); //TODO:make this generic, depends on ploidy
+	GT_Matrix<10,4> n();
+	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
+		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
+			Seqem::increment_s(s, *pos, possible_gts, std::make_tuple(std::get<3>(theta)),std::get<1>(theta));
+		}
+	}
+	double epsilon = Seqem::calc_epsilon(s);
+
+	m = n;
+	return std::make_tuple(th,pi,w,epsilon);
 }
 
 
@@ -236,5 +250,18 @@ double Popstatem::allele_alpha(char allele, char ref, double ref_weight, double 
 double Popstatem::ref_alpha(double ref_weight, double theta){
 	return ref_weight + theta;
 }
+
+double Popstatem::pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta, std::map<char,double> pi){
+	return Seqem::pg_x_given_theta(g,x,std::make_tuple(std::get<3>(theta)),pi);
+}
+
+double Popstatem::pdata_given_theta(std::vector<char> x, theta_t theta, std::vector<Genotype> possible_gts){
+	double p = 0.0;
+	for (auto g = possible_gts.begin(); g != possible_gts.end(); ++g){
+		p += pg_x_given_theta(*g, x, theta, std::get<1>(theta));
+	}
+	return p;
+}
+
 
 

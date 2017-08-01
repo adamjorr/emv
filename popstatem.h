@@ -6,7 +6,7 @@
 #include "genotype.h"
 #include <vector>
 
-typedef std::tuple<double, std::map<char, double>, double> theta_t; //theta, pi, refweight
+typedef std::tuple<double, std::map<char, double>, double, double> theta_t; //theta, pi, refweight, epsilon
 
 template<int alleles, int gts>
 using GT_Matrix = std::array<std::array<double,gts>,alleles>;
@@ -38,6 +38,8 @@ public:
 	static double allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi);
 	static double allele_alpha(char allele, char ref, double ref_weight, double theta, double pi);
 	static double ref_alpha(double ref_weight, double theta);
+	static double pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta, std::map<char,double> pi); //not log space
+	static double pdata_given_theta(std::vector<char> x, theta_t theta);
 };
 
 #endif

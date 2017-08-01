@@ -34,7 +34,6 @@ std::ostream& operator<<(std::ostream& os, const std::tuple<T0, T...> t){
 
 std::ostream& operator<<(std::ostream& os, const std::tuple<>);
 
-
 //Vector printing
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T> vec){
