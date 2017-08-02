@@ -14,6 +14,7 @@ ploidy(ploidy), gts(Genotype::enumerate_gts(ploidy)), data(std::vector<double>(g
 	while(std::getline(f,line)){
 		
 	}
+	f.close();
 }
 
 GT_Matrix::GT_Matrix(Pileupdata plpdata, int ploidy, theta_t theta, std::map<char,double> pi):
