@@ -39,7 +39,7 @@ public:
 	static double allele_alpha(char allele, char ref, double ref_weight, double theta, double pi);
 	static double ref_alpha(double ref_weight, double theta);
 	static double pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta, std::map<char,double> pi); //not log space
-	static double pdata_given_theta(std::vector<char> x, theta_t theta);
+	static double pdata_given_theta(std::vector<char> x, theta_t theta, std::std::vector<Genotype> possible_gts);
 };
 
 #endif
