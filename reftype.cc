@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <stdlib.h>
 
-Reftype::Reftype(std::string reference_name){
+Reftype::Reftype(std::string reference_name) : ref(){
 	faidx_t* faidx = fai_load(reference_name.c_str());
 	if (faidx == nullptr){
 		throw std::runtime_error("error loading reference");
@@ -10,10 +10,10 @@ Reftype::Reftype(std::string reference_name){
 	faidx_p = faidx;
 }
 
-Reftype::Reftype(faidx_t* faidx_p) : faidx_p(faidx_p) {
+Reftype::Reftype(faidx_t* faidx_p) : faidx_p(faidx_p), ref() {
 }
 
-Reftype::Reftype() : faidx_p(nullptr){
+Reftype::Reftype() : faidx_p(nullptr), ref(){
 }
 
 Reftype::~Reftype(){
@@ -29,7 +29,7 @@ std::string Reftype::get_ref(std::string region){
 		if (ref_p == nullptr){
 			throw std::runtime_error("error getting ref");
 		}
-		ref = std::string(ref_p);
+		ref.assign(ref_p,ref_len);
 	}
 	return ref;
 }

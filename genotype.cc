@@ -78,5 +78,7 @@ std::ostream& operator<<(std::ostream& os, const Genotype gt){
 	return os << gt.to_string();
 }
 
-
+bool operator==(const Genotype& lhs, const Genotype& rhs){
+	return lhs.gt == rhs.gt;
+}
 

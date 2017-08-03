@@ -28,7 +28,7 @@ Seqem::Seqem(std::string samfile, std::string refname, int ploidy) : plp(samfile
 Seqem::Seqem(std::string samfile, std::string refname) : Seqem(samfile, refname, 2) {
 }
 
-theta_t Seqem::start(double stop){
+Seqem::theta_t Seqem::start(double stop){
 	return em.start(stop);
 }
 
@@ -47,30 +47,29 @@ double Seqem::q_function(theta_t theta){
 	return likelihood;
 }
 
-theta_t Seqem::m_function(theta_t theta){
+Seqem::theta_t Seqem::m_function(theta_t theta){
 	pileupdata_t plpdata = plp.get_data();
 	std::vector<double> s(3,0.0); //TODO:make this generic, depends on ploidy
 
 	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
-			increment_s(s, *pos, possible_gts, theta, uniform_pi);
+			increment_s(s, std::get<0>(*pos), possible_gts, theta, uniform_pi);
 		}
 	}
 	return std::make_tuple(calc_epsilon(s));
 }
 
-void increment_s(std::vector<double> &s, pileuptuple_t pos, std::vector<Genotype> possible_gts, theta_t theta, std::map<char,double> pi){
-	const std::vector<char> &x = std::get<0>(pos);
-	for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-		std::vector<double> site_s = calc_s(x,*g,theta);
-		double pg_x = pg_x_given_theta(*g,x,theta,pi);
+void Seqem::increment_s(std::vector<double> &s, std::vector<char> x, const std::vector<Genotype> gts, theta_t theta, std::map<char,double> pi){
+	for (auto g : gts){
+		std::vector<double> site_s = calc_s(x,g);
+		double pg_x = pg_x_given_theta(g,x,theta,pi);
 		for(size_t i = 0; i < s.size(); ++i){
 			s[i] += pg_x * site_s[i];	
 		}
 	}
 }
 
-std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g, theta_t theta){ //TODO: make this generic
+std::vector<double> Seqem::calc_s(std::vector<char> x, Genotype g){ //TODO: make this generic
 	std::vector<double> s(3,0.0);
 	for (std::vector<char>::iterator i = x.begin(); i != x.end(); ++i){
 		int numgt = g.numbase(*i);
@@ -150,7 +149,7 @@ double Seqem::pg(Genotype g, std::map<char,double> pi){
 	return p;
 }
 
-double calc_epsilon(std::vector<double> s){
+double Seqem::calc_epsilon(std::vector<double> s){
 	double a = 3.0 * (s[0] + s[1] + s[2]);
 	double b = - (3.0/2 * s[0] + s[1] + 5.0/2 * s[2]);
 	double c = s[2] / 2;

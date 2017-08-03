@@ -7,9 +7,10 @@
 #include "genotype.h"
 #include <vector>
 
-typedef std::tuple<double> theta_t; //epsilon parameter
+
 
 class Seqem{
+	typedef std::tuple<double> theta_t; //epsilon parameter
 protected:
 	Pileupdata plp;
 	theta_t theta;
@@ -24,8 +25,8 @@ public:
 	theta_t start(double stop);
 	double q_function(theta_t theta);
 	theta_t m_function(theta_t theta);
-	static void increment_s(std::vector<double> &s, pileuptuple_t pos, std::vector<Genotype> possible_gts, theta_t theta, std::map<char,double> pi); //mutates s
-	static std::vector<double> calc_s(std::vector<char> x, Genotype g, theta_t theta);
+	static void increment_s(std::vector<double> &s, std::vector<char> x, std::vector<Genotype> possible_gts, theta_t theta, std::map<char,double> pi); //mutates s
+	static std::vector<double> calc_s(std::vector<char> x, Genotype g);
 	static double pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta, std::map<char,double> pi); //not log space
 	static double px_given_gtheta(std::vector<char> x, Genotype g, theta_t theta); // log space
 	static double pn_given_gtheta(char n, Genotype g, theta_t theta); //log space

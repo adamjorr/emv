@@ -25,6 +25,7 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& os, const Genotype);
+bool operator==(const Genotype& lhs, const Genotype& rhs);
 
 #endif
 

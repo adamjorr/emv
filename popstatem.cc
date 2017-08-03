@@ -1,6 +1,8 @@
 #include "popstatem.h"
 #include "seqem.h"
 #include "meep_math.h"
+#include "gt_matrix.h"
+#include "tuple_print.h"
 #include <cmath>
 #include <functional>
 #include <algorithm>
@@ -10,21 +12,21 @@
 #include <cstring>
 #include <limits>
 
-Popstatem::Popstatem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1,std::map<char,double>(),1)),
+typedef Popstatem::theta_t theta_t;
+
+Popstatem::Popstatem(Pileupdata p, int ploidy) : plp(p), theta(std::make_tuple(0.1,Seqem::uniform_pi,1,0.1)),
 	em(std::bind(&Popstatem::q_function, this, std::placeholders::_1), std::bind(&Popstatem::m_function,this,std::placeholders::_1), theta),
-	ploidy(ploidy){
-	possible_gts = Genotype::enumerate_gts(ploidy);
-	m = load_matrix();
+	ploidy(ploidy), m(ploidy), possible_gts(Genotype::enumerate_gts(ploidy)){
+	// possible_gts = Genotype::enumerate_gts(ploidy);
 }
 
 Popstatem::Popstatem(Pileupdata p): Popstatem(p, 2){
 }
 
-Popstatem::Popstatem(std::string samfile, std::string refname, int ploidy) : plp(samfile, refname), theta(std::make_tuple(0.1,std::map<char, double>(),1)),
+Popstatem::Popstatem(std::string samfile, std::string refname, int ploidy) : plp(samfile, refname), theta(std::make_tuple(0.1,Seqem::uniform_pi,1,0.1)),
 	em(std::bind(&Popstatem::q_function, this, std::placeholders::_1), std::bind(&Popstatem::m_function,this,std::placeholders::_1), theta),
-	ploidy(ploidy){
-	possible_gts = Genotype::enumerate_gts(ploidy);
-	m = load_matrix();
+	ploidy(ploidy), m(ploidy), possible_gts(Genotype::enumerate_gts(ploidy)){
+	// possible_gts = Genotype::enumerate_gts(ploidy);
 }
 
 Popstatem::Popstatem(std::string samfile, std::string refname) : Popstatem(samfile, refname, 2) {
@@ -36,17 +38,14 @@ theta_t Popstatem::start(double stop){
 
 double Popstatem::q_function(theta_t theta){
 	double likelihood = 0.0;
-	for (size_t i = 0; i < Genotype::alleles.size(); ++i){
-		for (size_t j = 0; j < possible_gts.size(); ++j){
-			Genotype g = possible_gts[j];
-			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){
-				char allele = it->first;
-				for (int k = 0; k < it->second; ++k){
-					likelihood += m[i][j] * log(allele_alpha(allele,Genotype::alleles[i],std::get<2>(theta),std::get<0>(theta),std::get<1>(theta)) + k);
-				}
-			}
-			for (int l = 0; l < ploidy; ++l){
-				likelihood -= m[i][j] * log(ref_alpha(std::get<2>(theta), std::get<0>(theta) + l));
+	pileupdata_t plpdata = plp.get_data();
+
+	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
+		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
+			const std::vector<char> &x = std::get<0>(*pos);
+			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
+				double pg_x = pg_x_given_theta(*g,x,theta);
+				likelihood += (pg_x/pdata_given_theta(x,theta,possible_gts)) * log(pg_x);
 			}
 		}
 	}
@@ -54,6 +53,7 @@ double Popstatem::q_function(theta_t theta){
 }
 
 theta_t Popstatem::m_function(theta_t theta){
+	std::cout << "matrix\n" << m << std::endl;
 	double th = meep_math::nr_root(std::bind(&Popstatem::dq_dtheta,this,std::placeholders::_1),std::bind(&Popstatem::ddq_dtheta,this,std::placeholders::_1),std::get<0>(theta));
 	double w = meep_math::nr_root(std::bind(&Popstatem::dq_dw,this,std::placeholders::_1),std::bind(&Popstatem::ddq_dw,this,std::placeholders::_1),std::get<2>(theta));
 
@@ -72,10 +72,20 @@ theta_t Popstatem::m_function(theta_t theta){
 	//optimize epsilon and update gt matrix m
 	pileupdata_t plpdata = plp.get_data();
 	std::vector<double> s(3,0.0); //TODO:make this generic, depends on ploidy
-	GT_Matrix<10,4> n();
-	for (pileupdata_t::iterator tid = plpdata.begin(); tid != plpdata.end(); ++tid){
-		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
-			Seqem::increment_s(s, *pos, possible_gts, std::make_tuple(std::get<3>(theta)),std::get<1>(theta));
+	GT_Matrix n;
+	for (auto tid : plpdata){
+		int i = 0;
+		for(auto pos : tid){
+			std::vector<char> x = std::get<0>(pos);
+			char ref = std::get<3>(pos);
+			if (std::find(Genotype::alleles.begin(), Genotype::alleles.end(), ref) != Genotype::alleles.end()){
+				double eps = std::get<3>(theta);
+				std::map<char,double> pi = std::get<1>(theta);
+				Seqem::increment_s(s, x, possible_gts, std::make_tuple(eps),pi);
+				// std::cout << "x:" << x << "\tRef:" << ref << "\tPos:" << i << "\tNull:" << (ref == NULL) << std::endl;
+				load_matrix(n,x,ref);
+			}
+			i++;
 		}
 	}
 	double epsilon = Seqem::calc_epsilon(s);
@@ -84,24 +94,12 @@ theta_t Popstatem::m_function(theta_t theta){
 	return std::make_tuple(th,pi,w,epsilon);
 }
 
-
-//todo: figure out what to do with this function
-GT_Matrix<10,4> Popstatem::load_matrix(){
-	// for (pileupdata_t::iterator tid = plp.begin(); tid != plp.end(); ++tid){
-	// 	for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
-	// 		const std::vector<char> &x = std::get<0>(*pos);
-	// 		const char &ref = std::get<3>(*pos);
-	// 		// for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-	// 		// 	std::vector<double> site_s = calc_s(x,*g,theta);
-	// 		// 	double pg_x = pg_x_given_theta(*g,x,theta);
-	// 		// 	for(size_t i = 0; i < s.size(); ++i){
-	// 		// 		s[i] += pg_x * site_s[i];	
-	// 		// 	}
-	// 		// 	t[ref][*g] += pg_x;
-	// 		// }
-	// 	}
-	// }
-	return GT_Matrix<10,4>();
+void Popstatem::load_matrix(GT_Matrix &m, std::vector<char> x, char ref){
+	for (auto g : possible_gts){
+		double pg_x = pg_x_given_theta(g,x,theta);
+		double pdata = pdata_given_theta(x,theta,possible_gts);
+		m(ref,g) += pg_x / pdata;
+	}
 }
 
 double Popstatem::dq_dtheta(double th){
@@ -111,7 +109,7 @@ double Popstatem::dq_dtheta(double th){
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
 	for (int i = 0; i < numalleles; ++i){ //for each reference base
-		for (int j = 0; i < numgts; ++j){ //for each genotype
+		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
 				char allele = it -> first;
@@ -134,7 +132,7 @@ double Popstatem::ddq_dtheta(double th){
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
 	for (int i = 0; i < numalleles; ++i){ //for each reference base
-		for (int j = 0; i < numgts; ++j){ //for each genotype
+		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (int l = 0; l < ploidy; ++l){ //add  1/alpha, 1/(alpha + 1)
 				ddq += m[i][j] * (1.0 / pow(ref_alpha(refweight, th) + l,2));	
@@ -157,7 +155,7 @@ double Popstatem::dq_dw(double w){
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
 	for (int i = 0; i < numalleles; ++i){ //for each reference base
-		for (int j = 0; i < numgts; ++j){ //for each genotype
+		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
 				char allele = it -> first;
@@ -179,7 +177,7 @@ double Popstatem::ddq_dw(double w){
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
 	for (int i = 0; i < numalleles; ++i){ //for each reference base
-		for (int j = 0; i < numgts; ++j){ //for each genotype
+		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
 				char allele = it -> first;
@@ -201,7 +199,7 @@ double Popstatem::dq_dpi(char a, double pi){
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
 	for (int i = 0; i < numalleles - 1; ++i){ //for each reference base except one
-		for (int j = 0; i < numgts; ++j){ //for each genotype
+		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
 				char allele = it -> first;
@@ -223,7 +221,7 @@ double Popstatem::ddq_dpi(char a, double pi){
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
 	for (int i = 0; i < numalleles - 1; ++i){ //for each reference base except one
-		for (int j = 0; i < numgts; ++j){ //for each genotype
+		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
 				char allele = it -> first;
@@ -251,14 +249,16 @@ double Popstatem::ref_alpha(double ref_weight, double theta){
 	return ref_weight + theta;
 }
 
-double Popstatem::pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta, std::map<char,double> pi){
-	return Seqem::pg_x_given_theta(g,x,std::make_tuple(std::get<3>(theta)),pi);
+double Popstatem::pg_x_given_theta(Genotype g, std::vector<char> x, theta_t theta){
+	double e = std::get<3>(theta);
+	std::map<char,double> p = std::get<1>(theta);
+	return Seqem::pg_x_given_theta(g,x,std::make_tuple(e),p);
 }
 
-double Popstatem::pdata_given_theta(std::vector<char> x, theta_t theta, std::vector<Genotype> possible_gts){
+double Popstatem::pdata_given_theta(std::vector<char> x, theta_t theta, std::vector<Genotype> gts){
 	double p = 0.0;
-	for (auto g = possible_gts.begin(); g != possible_gts.end(); ++g){
-		p += pg_x_given_theta(*g, x, theta, std::get<1>(theta));
+	for (auto g : gts){
+		p += pg_x_given_theta(g, x, theta);
 	}
 	return p;
 }

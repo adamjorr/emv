@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 set (CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -O0")
 project (meep)
 
 add_library(libmeep STATIC
@@ -13,6 +13,7 @@ add_library(libmeep STATIC
   tuple_print.cc
   popstatem.cc
   meep_math.cc
+  gt_matrix.cc
 )
 
 target_link_libraries(libmeep hts)
@@ -20,4 +21,5 @@ target_link_libraries(libmeep hts)
 add_executable(meep meep.cc)
 target_link_libraries(meep hts)
 target_link_libraries(meep libmeep)
+
 

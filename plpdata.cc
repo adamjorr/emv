@@ -24,12 +24,15 @@ Pileupdata::Pileupdata(std::vector<char> x) : Pileupdata(x, x[0], x) {
 //I'll need to think of something better; this will break if the pileup isn't completely contiguous (ie multiple ranges)
 void Pileupdata::populate_data(){
 	std::map<std::string,int> chrs = plp.get_name_map();
-	while(plp.next() != 0){
-		int tid = plp.get_tid();
-		char ref_char = plp.ref_char;		
-		data.resize(tid + 1);
-		data[tid].push_back(std::make_tuple(plp.alleles,plp.counts,plp.qual,ref_char,plp.readgroups));
-		++ref_counts[ref_char];
+	int val;
+	while((val = plp.next()) != 0){
+		if (val == 1){
+			int tid = plp.get_tid();
+			char ref_char = plp.ref_char;		
+			data.resize(tid + 1);
+			data[tid].push_back(std::make_tuple(plp.alleles,plp.counts,plp.qual,ref_char,plp.readgroups));
+			++ref_counts[ref_char];
+		}
 	}
 }
 

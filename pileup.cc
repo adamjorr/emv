@@ -3,11 +3,11 @@
 #include "samio.h"
 #include <iostream>
 
-Pileup::Pileup(std::string samfile, std::string reffile): reader(samfile), ref(reffile), tid(), pos(), cov(), pileup(nullptr), iter(), alleles(), qual(), names(), readgroups(), counts({{'A',0},{'T',0},{'G',0},{'C',0}})  {
+Pileup::Pileup(std::string samfile, std::string reffile): reader(samfile), ref(reffile), tid(), pos(), cov(), pileup(nullptr), iter(), alleles(), qual(), names(), readgroups(), counts({{'A',0},{'T',0},{'G',0},{'C',0}}), ref_char()  {
 	iter = bam_plp_init(&Pileup::plp_get_read, &reader);
 }
 
-Pileup::Pileup(std::string samfile, std::string reffile, std::string region): reader(samfile, region), ref(reffile), tid(), pos(), cov(), pileup(nullptr), iter(), alleles(), qual(), names(), readgroups(), counts({{'A',0},{'T',0},{'G',0},{'C',0}}) {
+Pileup::Pileup(std::string samfile, std::string reffile, std::string region): reader(samfile, region), ref(reffile), tid(), pos(), cov(), pileup(nullptr), iter(), alleles(), qual(), names(), readgroups(), counts({{'A',0},{'T',0},{'G',0},{'C',0}}), ref_char() {
 	iter = bam_plp_init(&Pileup::plp_get_read, &reader);
 }
 
@@ -31,6 +31,12 @@ int Pileup::next(){
 	if((pileup = bam_plp_auto(iter, &tid, &pos, &cov)) != nullptr){ //successfully pile up new position
 		alleles.clear(); qual.clear(); names.clear(); readgroups.clear(); counts.clear();
 		alleles.reserve(cov); qual.reserve(cov); names.reserve(cov); readgroups.reserve(cov);
+
+		std::string refstr = ref.get_ref(get_chr_name(tid));
+		if (pos < 0 || pos >= refstr.size()){
+			return -1; //position piled up, but not desireable site
+		}
+
 		for (int i = 0; i < cov; ++i){
 			bam1_t* alignment = pileup[i].b;
 			uint8_t* seq = bam_get_seq(alignment);
