@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <cstring>
 #include <limits>
+#include <boost/math/tools/roots.hpp>
 
 typedef Popstatem::theta_t theta_t;
 
@@ -53,44 +54,40 @@ double Popstatem::q_function(theta_t theta){
 }
 
 theta_t Popstatem::m_function(theta_t theta){
-	std::cout << "matrix\n" << m << std::endl;
-	double th = meep_math::nr_root(std::bind(&Popstatem::dq_dtheta,this,std::placeholders::_1),std::bind(&Popstatem::ddq_dtheta,this,std::placeholders::_1),std::get<0>(theta));
-	double w = meep_math::nr_root(std::bind(&Popstatem::dq_dw,this,std::placeholders::_1),std::bind(&Popstatem::ddq_dw,this,std::placeholders::_1),std::get<2>(theta));
-
-	std::map<char,double> pi = std::get<1>(theta);
-	double p = 0.0;
-	for (size_t i = 0; i < Genotype::alleles.size()-1; ++i){
-		char a = Genotype::alleles[i];
-		auto qprime = std::bind(&Popstatem::dq_dpi,this,a,std::placeholders::_1);
-		auto qprimeprime = std::bind(&Popstatem::ddq_dpi,this,a,std::placeholders::_1);
-		double optimum = meep_math::nr_root(qprime,qprimeprime,pi[a]);
-		pi[a] = optimum;
-		p += optimum;
-	}
-	pi[Genotype::alleles.back()] = 1 - p;
-
 	//optimize epsilon and update gt matrix m
 	pileupdata_t plpdata = plp.get_data();
 	std::vector<double> s(3,0.0); //TODO:make this generic, depends on ploidy
 	GT_Matrix n;
 	for (auto tid : plpdata){
-		int i = 0;
 		for(auto pos : tid){
 			std::vector<char> x = std::get<0>(pos);
 			char ref = std::get<3>(pos);
-			if (std::find(Genotype::alleles.begin(), Genotype::alleles.end(), ref) != Genotype::alleles.end()){
-				double eps = std::get<3>(theta);
-				std::map<char,double> pi = std::get<1>(theta);
-				Seqem::increment_s(s, x, possible_gts, std::make_tuple(eps),pi);
-				// std::cout << "x:" << x << "\tRef:" << ref << "\tPos:" << i << "\tNull:" << (ref == NULL) << std::endl;
-				load_matrix(n,x,ref);
-			}
-			i++;
+			double eps = std::get<3>(theta);
+			std::map<char,double> pi = std::get<1>(theta);
+			Seqem::increment_s(s, x, possible_gts, std::make_tuple(eps),pi);
+			load_matrix(n,x,ref);
 		}
 	}
 	double epsilon = Seqem::calc_epsilon(s);
 
-	m = n;
+	m = n; //this must be set before theta, w, and pi can be optimized
+
+
+	//optimize theta, w, and pi
+	double th = boost::math::tools::newton_raphson_iterate([this](const double& x){return std::make_tuple(dq_dtheta(x),ddq_dtheta(x));},std::get<0>(theta),0.0,10000.0,5);
+	double w = boost::math::tools::newton_raphson_iterate([this](const double& x){return std::make_tuple(dq_dw(x),ddq_dw(x));},std::get<2>(theta),-1000.0,100000.0,5);
+
+	std::map<char,double> pi = std::get<1>(theta);
+	double p = 0.0;
+	for (size_t i = 0; i < Genotype::alleles.size()-1; ++i){
+		char a = Genotype::alleles[i];
+		double optimum = boost::math::tools::newton_raphson_iterate([this,a](const double& x){return std::make_tuple(dq_dpi(a,x),ddq_dpi(a,x));},pi[a],0.0,1.0,5);
+		std::cout << "allele:" << a << "\tpi:" << pi[a] <<"\toptimum:" << optimum  << std::endl;
+		pi[a] = optimum;
+		p += optimum;
+	}
+	pi[Genotype::alleles.back()] = 1 - p;
+
 	return std::make_tuple(th,pi,w,epsilon);
 }
 
@@ -98,7 +95,8 @@ void Popstatem::load_matrix(GT_Matrix &m, std::vector<char> x, char ref){
 	for (auto g : possible_gts){
 		double pg_x = pg_x_given_theta(g,x,theta);
 		double pdata = pdata_given_theta(x,theta,possible_gts);
-		m(ref,g) += pg_x / pdata;
+		double current = m(ref,g);
+		m(ref,g) = (pg_x / pdata) + current;
 	}
 }
 
@@ -198,14 +196,14 @@ double Popstatem::dq_dpi(char a, double pi){
 	double refweight = std::get<2>(theta);
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
-	for (int i = 0; i < numalleles - 1; ++i){ //for each reference base except one
+	for (int i = 0; i < numalleles; ++i){ //for each reference base
 		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
 				char allele = it -> first;
 				if (allele == a){
 					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
-						dq += m[i][j] * ((th)/(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k));
+						dq += m[i][j] * th /(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k);
 					}
 				}
 			}
@@ -220,14 +218,14 @@ double Popstatem::ddq_dpi(char a, double pi){
 	double refweight = std::get<2>(theta);
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
-	for (int i = 0; i < numalleles - 1; ++i){ //for each reference base except one
+	for (int i = 0; i < numalleles; ++i){ //for each reference base
 		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
 			for (auto it = g.gt.begin(); it != g.gt.end(); ++it){ //for each base in genotype
 				char allele = it -> first;
 				if (allele == a){
 					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
-						ddq -= m[i][j] * (pow(th,2)/pow(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k,2));
+						ddq -= m[i][j] * pow(th,2) / pow(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k,2);
 					}
 				}
 			}

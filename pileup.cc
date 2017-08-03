@@ -1,7 +1,9 @@
 #include "pileup.h"
-#include <htslib/sam.h>
 #include "samio.h"
+#include "genotype.h"
+#include <htslib/sam.h>
 #include <iostream>
+#include <algorithm>
 
 Pileup::Pileup(std::string samfile, std::string reffile): reader(samfile), ref(reffile), tid(), pos(), cov(), pileup(nullptr), iter(), alleles(), qual(), names(), readgroups(), counts({{'A',0},{'T',0},{'G',0},{'C',0}}), ref_char()  {
 	iter = bam_plp_init(&Pileup::plp_get_read, &reader);
@@ -35,6 +37,10 @@ int Pileup::next(){
 		std::string refstr = ref.get_ref(get_chr_name(tid));
 		if (pos < 0 || pos >= refstr.size()){
 			return -1; //position piled up, but not desireable site
+		}
+		ref_char = ref.get_ref(get_chr_name(tid))[pos];
+		if (std::find(Genotype::alleles.begin(), Genotype::alleles.end(), ref_char) == Genotype::alleles.end()){
+			return -1; //position piled up, but ref is an invalid base
 		}
 
 		for (int i = 0; i < cov; ++i){

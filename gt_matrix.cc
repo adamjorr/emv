@@ -8,7 +8,8 @@
 
 GT_Matrix::GT_Matrix(): GT_Matrix(2) {}
 
-GT_Matrix::GT_Matrix(int ploidy): ploidy(ploidy), gts(Genotype::enumerate_gts(ploidy)), data(Genotype::alleles.size(),std::vector<double>(gts.size(),0.0)) {}
+GT_Matrix::GT_Matrix(int ploidy): ploidy(ploidy), gts(Genotype::enumerate_gts(ploidy)), data(Genotype::alleles.size(),std::vector<double>(gts.size(),0.0)) {
+}
 
 GT_Matrix::GT_Matrix(std::string filename, int ploidy):
 ploidy(ploidy), gts(Genotype::enumerate_gts(ploidy)), data(Genotype::alleles.size(),std::vector<double>(gts.size())){
@@ -52,16 +53,16 @@ double GT_Matrix::operator()(char allele, Genotype gt) const{
 }
 
 double& GT_Matrix::operator()(char allele, Genotype gt){
-	std::vector<double> row = data[std::distance(Genotype::alleles.begin(),std::find(Genotype::alleles.begin(), Genotype::alleles.end(), allele))];
+	std::vector<double>& row = data[std::distance(Genotype::alleles.begin(),std::find(Genotype::alleles.begin(), Genotype::alleles.end(), allele))];
 	ptrdiff_t idx = std::distance(gts.begin(),std::find(gts.begin(), gts.end(), gt));
 	return row[idx];
 }
 
 std::ostream& operator<<(std::ostream& os, const GT_Matrix m){
-	os << "-" << std::endl;
+	os << "- matrix -" << std::endl;
 	for(int i = 0; i < Genotype::alleles.size(); ++i){
 		os << m[i] << std::endl;
 	}
-	return os << "-" << std::endl;
+	return os << "----------" << std::endl;
 }
 

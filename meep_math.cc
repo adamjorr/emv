@@ -83,12 +83,16 @@ namespace meep_math{
 		return x;
 	}
 
-	//newton-raphson root finding
+	//newton-raphson root finding DO NOT USE, DOESN'T WORK
 	double nr_root(std::function<double(double)> f, std::function<double(double)> f_prime, double init, double tolerance, int maxiter){
 		double x = init;
 		int iter = 0;
 		double f_x = f(x);
 		while (f_x > tolerance || iter++ <= maxiter){
+			double f_pm = f_prime(x);
+			if (f_pm == 0){
+				throw std::runtime_error("Divison by zero; x = " + std::to_string(x) + " f(x) = " + std::to_string(f_x) + " f'(x) = " + std::to_string(f_pm));
+			}
 			x -= f_x / f_prime(x);
 			f_x = f(x);
 		}
