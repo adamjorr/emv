@@ -50,7 +50,7 @@ std::tuple<T...> EM<T...>::start(double stop){
 	double difference;
 	do{
 		double current_likelihood = q_function(theta);
-		std::clog << "Theta = " << theta << "\tlikelihood = " << current_likelihood << std::endl;
+		std::clog << "Theta = " << theta << "\nlikelihood = " << current_likelihood << std::endl;
 		difference = likelihood_diff(likelihood, current_likelihood);
 		likelihood = current_likelihood;
 		theta = m_function(theta);

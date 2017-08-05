@@ -45,8 +45,7 @@ double Popstatem::q_function(theta_t theta){
 		for(std::vector<pileuptuple_t>::iterator pos = tid->begin(); pos != tid->end(); ++pos){
 			const std::vector<char> &x = std::get<0>(*pos);
 			for (std::vector<Genotype>::iterator g = possible_gts.begin(); g != possible_gts.end(); ++g){
-				double pg_x = pg_x_given_theta(*g,x,theta);
-				likelihood += (pg_x/pdata_given_theta(x,theta,possible_gts)) * log(pg_x);
+				likelihood += pg_x_given_theta(*g,x,theta);
 			}
 		}
 	}
@@ -71,7 +70,7 @@ theta_t Popstatem::m_function(theta_t theta){
 	double epsilon = Seqem::calc_epsilon(s);
 
 	m = n; //this must be set before theta, w, and pi can be optimized
-
+	std::cout << m << std::endl;
 
 	//optimize theta, w, and pi
 	double th = boost::math::tools::newton_raphson_iterate([this](const double& x){return std::make_tuple(dq_dtheta(x),ddq_dtheta(x));},std::get<0>(theta),0.0,10000.0,5);
@@ -94,9 +93,9 @@ theta_t Popstatem::m_function(theta_t theta){
 void Popstatem::load_matrix(GT_Matrix &m, std::vector<char> x, char ref){
 	for (auto g : possible_gts){
 		double pg_x = pg_x_given_theta(g,x,theta);
-		double pdata = pdata_given_theta(x,theta,possible_gts);
-		double current = m(ref,g);
-		m(ref,g) = (pg_x / pdata) + current;
+		// double pdata = pdata_given_theta(x,theta,possible_gts);
+		// m(ref,g) += (pg_x / pdata);
+		m(ref,g) += pg_x;
 	}
 }
 
@@ -203,9 +202,14 @@ double Popstatem::dq_dpi(char a, double pi){
 				char allele = it -> first;
 				if (allele == a){
 					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
-						dq += m[i][j] * th /(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k);
+						dq += m[i][j] * th /(allele_alpha(allele,Genotype::alleles[i],refweight,th,pi) + k);
 					}
 				}
+				// else{
+				// 	for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+				// 		dq -= m[i][j] * th /(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k) / 3;
+				// 	}	
+				// }
 			}
 		}
 	}
@@ -225,9 +229,14 @@ double Popstatem::ddq_dpi(char a, double pi){
 				char allele = it -> first;
 				if (allele == a){
 					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
-						ddq -= m[i][j] * pow(th,2) / pow(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k,2);
+						ddq -= m[i][j] * pow(th,2) / pow(allele_alpha(allele,Genotype::alleles[i],refweight,th,pi) + k,2);
 					}
 				}
+				// else{
+				// 	for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+				// 		ddq -= m[i][j] * pow(th,2) / pow(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k,2) / 9;
+				// 	}	
+				// }
 			}
 		}
 	}
