@@ -18,6 +18,7 @@ protected:
 	std::vector<Genotype> gts;
 	std::vector<std::vector<double>> data;
 public:
+	friend std::ostream& operator<<(std::ostream& os, const GT_Matrix);
 	std::vector<double> operator[](size_t i) const {return data[i];};
 	std::vector<double> operator[](int i) const {return data[i];};
 	std::vector<double> &operator[](size_t i) {return data[i];};

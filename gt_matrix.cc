@@ -59,8 +59,10 @@ double& GT_Matrix::operator()(char allele, Genotype gt){
 }
 
 std::ostream& operator<<(std::ostream& os, const GT_Matrix m){
-	os << "- matrix -" << std::endl;
+	os << "- gt_matrix - " << std::endl;
+	os << "GTs : " << m.gts << std::endl;
 	for(int i = 0; i < Genotype::alleles.size(); ++i){
+		os << Genotype::alleles[i] << " : ";
 		os << m[i] << std::endl;
 	}
 	return os << "----------" << std::endl;
