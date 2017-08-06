@@ -77,25 +77,31 @@ theta_t Popstatem::m_function(theta_t theta){
 	double w = boost::math::tools::newton_raphson_iterate([this](const double& x){return std::make_tuple(dq_dw(x),ddq_dw(x));},std::get<2>(theta),-1000.0,100000.0,5);
 
 	std::map<char,double> pi = std::get<1>(theta);
+	std::map<char,double> new_pi(pi);
 	double p = 0.0;
 	for (size_t i = 0; i < Genotype::alleles.size()-1; ++i){
 		char a = Genotype::alleles[i];
-		double optimum = boost::math::tools::newton_raphson_iterate([this,a](const double& x){return std::make_tuple(dq_dpi(a,x),ddq_dpi(a,x));},pi[a],0.0,1.0,5);
+		double max_pi = 1.0;
+		for (size_t j = 0; j < Genotype::alleles.size()-1; ++j){
+			char p_allele = Genotype::alleles[j];
+			max_pi -= (p_allele == a ? 0 : new_pi[p_allele]);
+		}
+		double optimum = boost::math::tools::newton_raphson_iterate([this,a](const double& x){return std::make_tuple(dq_dpi(a,x),ddq_dpi(a,x));},pi[a],0.0,max_pi,5);
 		std::cout << "allele:" << a << "\tpi:" << pi[a] <<"\toptimum:" << optimum  << std::endl;
-		pi[a] = optimum;
+		new_pi[a] = optimum;
 		p += optimum;
 	}
-	pi[Genotype::alleles.back()] = 1 - p;
+	new_pi[Genotype::alleles.back()] = 1 - p;
 
-	return std::make_tuple(th,pi,w,epsilon);
+	return std::make_tuple(th,new_pi,w,epsilon);
 }
 
 void Popstatem::load_matrix(GT_Matrix &m, std::vector<char> x, char ref){
 	for (auto g : possible_gts){
 		double pg_x = pg_x_given_theta(g,x,theta);
-		// double pdata = pdata_given_theta(x,theta,possible_gts);
-		// m(ref,g) += (pg_x / pdata);
-		m(ref,g) += pg_x;
+		double pdata = pdata_given_theta(x,theta,possible_gts);
+		m(ref,g) += (pg_x / pdata);
+		// m(ref,g) += pg_x;
 	}
 }
 
@@ -192,9 +198,16 @@ double Popstatem::ddq_dw(double w){
 double Popstatem::dq_dpi(char a, double pi){
 	double dq = 0.0;
 	double th = std::get<0>(theta);
+	std::map<char,double> p = std::get<1>(theta);
 	double refweight = std::get<2>(theta);
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
+	double pi_last = 1.0;
+	for (int i = 0; i < numalleles - 1; ++i){
+		char allele = Genotype::alleles[i];
+		pi_last -= (allele == a ? pi : p[allele]);
+	}
+	// pi_last = (pi_last < 0 ? 0 : pi_last);
 	for (int i = 0; i < numalleles; ++i){ //for each reference base
 		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
@@ -205,11 +218,11 @@ double Popstatem::dq_dpi(char a, double pi){
 						dq += m[i][j] * th /(allele_alpha(allele,Genotype::alleles[i],refweight,th,pi) + k);
 					}
 				}
-				// else{
-				// 	for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
-				// 		dq -= m[i][j] * th /(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k) / 3;
-				// 	}	
-				// }
+				else if(allele == Genotype::alleles.back()){
+					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+						dq -= m[i][j] * th /(allele_alpha(allele,Genotype::alleles[i],refweight,th,pi_last) + k);
+					}	
+				}
 			}
 		}
 	}
@@ -219,9 +232,16 @@ double Popstatem::dq_dpi(char a, double pi){
 double Popstatem::ddq_dpi(char a, double pi){
 	double ddq = 0.0;
 	double th = std::get<0>(theta);
+	std::map<char,double> p = std::get<1>(theta);
 	double refweight = std::get<2>(theta);
 	int numalleles = Genotype::alleles.size();
 	int numgts = possible_gts.size();
+	double pi_last = 1.0;
+	for (int i = 0; i < numalleles - 1; ++i){
+		char allele = Genotype::alleles[i];
+		pi_last -= (allele == a ? pi : p[allele]);
+	}
+	// pi_last = (pi_last < 0 ? 0 : pi_last);
 	for (int i = 0; i < numalleles; ++i){ //for each reference base
 		for (int j = 0; j < numgts; ++j){ //for each genotype
 			Genotype g = possible_gts[j];
@@ -232,11 +252,11 @@ double Popstatem::ddq_dpi(char a, double pi){
 						ddq -= m[i][j] * pow(th,2) / pow(allele_alpha(allele,Genotype::alleles[i],refweight,th,pi) + k,2);
 					}
 				}
-				// else{
-				// 	for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
-				// 		ddq -= m[i][j] * pow(th,2) / pow(allele_alpha(allele,(char)Genotype::alleles[i],refweight,th,pi) + k,2) / 9;
-				// 	}	
-				// }
+				else if (allele == Genotype::alleles.back()){
+					for (int k = 0; k < it->second; ++k){ //add 1/(alpha + 0) or +0 and +1 for homozygote
+						ddq -= m[i][j] * pow(th,2) / pow(allele_alpha(allele,Genotype::alleles[i],refweight,th,pi_last) + k,2);
+					}
+				}
 			}
 		}
 	}
