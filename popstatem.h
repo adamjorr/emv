@@ -30,6 +30,7 @@ public:
 	double q_function(theta_t theta);
 	theta_t m_function(theta_t theta);
 	void load_matrix(GT_Matrix &m, std::vector<char> x, char ref);
+	void apply_over_gt(std::function<void (int, int, std::vector<Genotype>::iterator)> f);
 	double dq_dtheta(double th);
 	double ddq_dtheta(double th);
 	double dq_dw(double w);

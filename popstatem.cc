@@ -263,6 +263,19 @@ double Popstatem::ddq_dpi(char a, double pi){
 	return ddq;	
 }
 
+void Popstatem::apply_over_gt(std::function<void (int, int, std::vector<Genotype>::iterator)> f){
+	int numalleles = Genotype::alleles.size();
+	int numgts = possible_gts.size();
+	for (int i = 0; i < numalleles; ++i){
+		for(int j = 0; j < numgts; ++j){
+			Genotype g = possible_gts[j];
+			for(std::vector<Genotype>::iterator it = g.gt.begin(); it != g.gt.end(); ++it){
+				f(i,j,it);
+			}
+		}
+	}
+}
+
 double Popstatem::allele_alpha(char allele, char ref, double ref_weight, double theta, std::map<char,double> pi){
 	double w = (ref == allele ? ref_weight : 0);
 	return theta * pi[allele] + w;
